@@ -1,0 +1,11 @@
+google-genai
+fastapi
+uvicorn
+pydantic
+python-dotenv
+
+# po puszczeniu pip install, wejsc na https://aistudio.google.com/ 
+# zalogować się na swoje konto i wygenerować klucz API
+# skopiować go i wkleić w pliku .env
+# trzeba utworzyc sobie tego typu pliku .env u siebie ze swoim kluczem 
+# PROJECT_API_KEY= klucz_API
