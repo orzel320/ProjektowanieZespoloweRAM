@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   ai-service:
     build: ./ai-service
@@ -28,6 +26,4 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    environment:
-      PROJECT_API_KEY: ${PROJECT_API_KEY}
     restart: unless-stopped
