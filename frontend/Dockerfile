@@ -1,4 +1,24 @@
-FROM ubuntu:latest
-LABEL authors="antek"
+# etap build
+FROM node:20-alpine AS builder
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app ./
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]
