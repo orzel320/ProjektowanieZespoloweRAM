@@ -1,9 +1,20 @@
 'use client';
 
-import { useState } from 'react';
 import GameGrid from '../components/Board';
 
-//  categoryId for checking mistakes
+// ==========================================
+// MOCK DATA (To be replaced with API calls)
+// ==========================================
+
+// Mock categories dictionary
+const mockCategories = {
+    1: { name: 'TROPICAL FRUITS', color: 'bg-yellow-400' },
+    2: { name: 'LIVING ROOM FURNITURE', color: 'bg-blue-400' },
+    3: { name: 'COMMON PETS', color: 'bg-emerald-400' },
+    4: { name: 'PRIMARY COLORS', color: 'bg-purple-400' }
+};
+
+// Mock puzzle words
 const mockWords = [
     { id: 1, text: 'APPLE', categoryId: 1 }, { id: 2, text: 'PINE', categoryId: 1 }, { id: 3, text: 'BANANA', categoryId: 1 }, { id: 4, text: 'KIWI', categoryId: 1 },
     { id: 5, text: 'TABLE', categoryId: 2 }, { id: 6, text: 'CHAIR', categoryId: 2 }, { id: 7, text: 'SOFA', categoryId: 2 }, { id: 8, text: 'ARM-CHAIR', categoryId: 2 },
@@ -12,22 +23,52 @@ const mockWords = [
 ];
 
 export default function Home() {
-    const [isChecking, setIsChecking] = useState(false);
 
-    const handleCheckSubmission = async (selectedIds) => {
-        setIsChecking(true);
-        await new Promise(resolve => setTimeout(resolve, 300)); // небольшая пауза для реалистичности
-        setIsChecking(false);
+    // ==========================================
+    // EVENT HANDLERS
+    // ==========================================
+
+    // Triggered when the player successfully finishes or completely loses the game
+    const handleGameComplete = (stats) => {
+        // 'stats' object contains: { status: 'won' | 'lost', time: 123, attempts: 5 }
+        console.log('Game completed! Ready to send stats to server:', stats);
+
+        // TODO: Future API Implementation
+        // await fetch('/api/save-score', { method: 'POST', body: JSON.stringify(stats) });
     };
+
+    // Triggered when the 'NEXT PUZZLE' button is clicked on the results screen
+    const handleNextPuzzle = () => {
+        console.log('Requesting new puzzle data from the backend...');
+
+        // TODO: Future API Implementation
+        // 1. Set isLoading state to true
+        // 2. Fetch new words and categories from backend
+        // 3. Update the state with new data
+        // 4. Set isLoading state back to false
+    };
+
+    // Triggered when the user clicks the 'LOBBY' button (header or results screen)
+    const handleLobbyClick = () => {
+        console.log('Navigating back to the main lobby...');
+
+        // TODO: Future Routing Implementation
+        // router.push('/lobby');
+    };
+
+    // ==========================================
+    // RENDER
+    // ==========================================
 
     return (
         <main className="min-h-screen bg-slate-50">
             <GameGrid
                 words={mockWords}
-                onSubmit={handleCheckSubmission}
-                isSubmitting={isChecking}
-                onLobbyClick={() => console.log('Lobby clicked')}
-                onInfoClick={() => console.log('Info clicked')}
+                categories={mockCategories}
+                isLoading={false} // Update this with actual loading state once API is connected
+                onGameComplete={handleGameComplete}
+                onNextPuzzle={handleNextPuzzle}
+                onLobbyClick={handleLobbyClick}
             />
         </main>
     );
