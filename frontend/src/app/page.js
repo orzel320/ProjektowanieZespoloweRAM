@@ -1,6 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import GameGrid from '../components/Board';
+
 
 // ==========================================
 // MOCK DATA (To be replaced with API calls)
@@ -23,6 +25,7 @@ const mockWords = [
 ];
 
 export default function Home() {
+    const router = useRouter()
 
     // ==========================================
     // EVENT HANDLERS
@@ -53,7 +56,8 @@ export default function Home() {
         console.log('Navigating back to the main lobby...');
 
         // TODO: Future Routing Implementation
-        // router.push('/lobby');
+
+        router.push('/lobby');
     };
 
     // ==========================================
