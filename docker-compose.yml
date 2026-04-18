@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: connections
+      POSTGRES_PASSWORD: connections
+      POSTGRES_DB: connections
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connections -d connections"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   ai-service:
     build: ./ai-service
     container_name: ai-service
@@ -14,8 +32,17 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      - ai-service
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
     environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_USER: connections
+      DATABASE_PASSWORD: connections
+      DATABASE_NAME: connections
+      NODE_ENV: development
       AI_SERVICE_URL: http://ai-service:8000
     restart: unless-stopped
 
@@ -27,3 +54,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  postgres_data:
