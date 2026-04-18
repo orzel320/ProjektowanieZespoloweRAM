@@ -1,14 +1,11 @@
 @import "tailwindcss";
-@tailwind utilities;
 
-/*@tailwind base;
-@tailwind components;*/
+@theme {
+    --animate-shake: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    --animate-jump: jump 0.4s ease-in-out;
+    --animate-merge: mergeUp 0.6s ease-in forwards;
+    --animate-pop-in: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 
-@layer utilities {
-    /* Shake animation for error */
-    .animate-shake {
-        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-    }
     @keyframes shake {
         10%, 90% { transform: translate3d(-1px, 0, 0); }
         20%, 80% { transform: translate3d(2px, 0, 0); }
@@ -16,28 +13,16 @@
         40%, 60% { transform: translate3d(4px, 0, 0); }
     }
 
-    /* Jump animation for success */
-    .animate-jump {
-        animation: jump 0.4s ease-in-out;
-    }
     @keyframes jump {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-35px); }
     }
 
-    /* Merge effect (cards fly up and disappear) */
-    .animate-merge {
-        animation: mergeUp 0.6s ease-in forwards;
-    }
     @keyframes mergeUp {
         0% { transform: scale(1); opacity: 1; }
         100% { transform: scale(0.5) translateY(-100px); opacity: 0; }
     }
 
-    /* Appearance of the final badge */
-    .animate-pop-in {
-        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
     @keyframes popIn {
         0% { transform: scale(0.9); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
