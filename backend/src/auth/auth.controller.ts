@@ -1,6 +1,8 @@
-import { Controller, Post, Body, Session, Get } from '@nestjs/common'; // aadded Get
+import { Controller, Post, Body, Session, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -14,7 +16,7 @@ export class AuthController {
   async login(@Body() body: { username: string; password: string }, @Session() session: any) {
     const result = await this.authService.login(body.username, body.password);
     
-    if (result.success) {
+    if (result.success && result.user) {
       // Store user in session (server-side, automatically sends cookie)
       session.userId = result.user.id;
       session.username = result.user.username;
