@@ -211,6 +211,7 @@ export default function GameGrid({
                     <div className="z-30 flex items-center gap-4">
                         <span className="font-mono font-bold text-slate-400 hidden sm:block">{formatTime(seconds)}</span>
                         <button onClick={() => setIsInfoModalOpen(true)} className="w-10 h-10 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl font-bold text-slate-600">?</button>
+                        <button onClick={() => {}} className="px-3 py-2 font-bold text-slate-600 z-30 hover:text-slate-900 transition-colors">LOGOUT</button>
                     </div>
                 </div>
             </header>

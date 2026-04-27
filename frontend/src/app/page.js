@@ -1,9 +1,33 @@
 'use client';
 
+import {useState, useEffect} from 'react'
 import { useRouter } from 'next/navigation';
 
 export default function LobbyPage() {
     const router = useRouter();
+
+    const [login, setLogin] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleLogin = async () => {
+        try {
+            const response = await fetch("http://localhost:8000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    login: login,
+                    password: password,
+                }),
+            });
+
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error("Login error:", error);
+        }
+    };
 
     return (
         <main className="min-h-screen bg-slate-50">
@@ -17,7 +41,33 @@ export default function LobbyPage() {
                     </div>
                 </header>
 
-                <div className="max-w-3xl mx-auto px-4 flex justify-center items-center relative" style={{ minHeight: '60vh' }}>
+                <div
+                    className="max-w-3xl mx-auto px-4 flex flex-col justify-center items-center relative gap-4"
+                    style={{ minHeight: '60vh' }}
+                >
+                    <input
+                        type="text"
+                        placeholder="Login"
+                        value={login}
+                        onChange={(e) => setLogin(e.target.value)}
+                        className="w-80 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-80 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+
+                    <button
+                        onClick={handleLogin}
+                        className="px-6 py-2 font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                        LOGIN
+                    </button>
+
                     <button
                         className="px-16 py-6 text-4xl sm:text-6xl rounded-3xl font-black bg-emerald-500 text-white shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all"
                         onClick={() => router.push('/play')}
@@ -25,8 +75,7 @@ export default function LobbyPage() {
                         PLAY
                     </button>
                 </div>
-
-            </div>
+                </div>
         </main>
     );
 }
