@@ -24,10 +24,34 @@ export default function LobbyPage() {
 
             const data = await response.json();
             console.log(data);
+
         } catch (error) {
             console.error("Login error:", error);
         }
     };
+
+
+    const handleRegister = async () => {
+        try {
+            const response = await fetch("http://localhost:8000/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    login: login,
+                    password: password,
+                }),
+            });
+
+            const data = await response.json();
+            console.log(data);
+
+        } catch (error) {
+            console.error("Login error:", error);
+        }
+    };
+
 
     return (
         <main className="min-h-screen bg-slate-50">
@@ -66,6 +90,13 @@ export default function LobbyPage() {
                         className="px-6 py-2 font-bold text-slate-600 hover:text-slate-900 transition-colors"
                     >
                         LOGIN
+                    </button>
+
+                    <button
+                        onClick={handleRegister}
+                        className="px-6 py-2 font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                        CREATE NEW ACCOUNT
                     </button>
 
                     <button
