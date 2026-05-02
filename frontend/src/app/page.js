@@ -17,7 +17,7 @@ export default function LobbyPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    login: login,
+                    username: login,
                     password: password,
                 }),
             });
@@ -39,7 +39,7 @@ export default function LobbyPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    login: login,
+                    username: login,
                     password: password,
                 }),
             });
