@@ -188,7 +188,7 @@ export default function GameGrid({
 
     const handleLogout = async () => {
         try {
-            const response = await fetch("http://localhost:3001/logout", {
+            const response = await fetch("http://localhost:3001/auth/logout", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

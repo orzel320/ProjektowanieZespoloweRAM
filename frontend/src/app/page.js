@@ -11,7 +11,7 @@ export default function LobbyPage() {
 
     const handleLogin = async () => {
         try {
-            const response = await fetch("http://localhost:3001/login", {
+            const response = await fetch("http://localhost:3001/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -33,7 +33,7 @@ export default function LobbyPage() {
 
     const handleRegister = async () => {
         try {
-            const response = await fetch("http://localhost:3001/register", {
+            const response = await fetch("http://localhost:3001/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
