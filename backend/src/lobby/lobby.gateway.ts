@@ -52,12 +52,12 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
-    const { room, roomDeleted } = this.lobbyService.leaveRoom(client.id);
+    const { room, roomId, roomDeleted } = this.lobbyService.leaveRoom(client.id);
 
-    if (!room && !roomDeleted) return;
+    if (!roomId && !roomDeleted) return;
 
     if (roomDeleted) {
-      this.server.emit(WS_EVENTS.ROOM_DELETED, { roomId: room?.roomId });
+      this.server.emit(WS_EVENTS.ROOM_DELETED, { roomId });
       return;
     }
 
@@ -125,11 +125,11 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
   @SubscribeMessage(WS_EVENTS.LEAVE_ROOM)
   handleLeaveRoom(@ConnectedSocket() client: Socket) {
-    const { room, roomDeleted } = this.lobbyService.leaveRoom(client.id);
-    void client.leave(room?.roomId ?? '');
+    const { room, roomId, roomDeleted } = this.lobbyService.leaveRoom(client.id);
+    void client.leave(roomId ?? '');
 
     if (roomDeleted) {
-      this.server.emit(WS_EVENTS.ROOM_DELETED, { roomId: room?.roomId });
+      this.server.emit(WS_EVENTS.ROOM_DELETED, { roomId });
     } else if (room) {
       const publicRoom = this.lobbyService.toPublic(room);
       this.server.to(room.roomId).emit(WS_EVENTS.ROOM_UPDATED, publicRoom);

@@ -45,7 +45,7 @@ export class LobbyService {
     return { success: true, room };
   }
 
-  leaveRoom(socketId: string): { room?: LobbyRoom; wasHost: boolean; roomDeleted: boolean } {
+  leaveRoom(socketId: string): { room?: LobbyRoom; roomId?: string; wasHost: boolean; roomDeleted: boolean } {
     const roomId = this.socketToRoom.get(socketId);
     if (!roomId) return { wasHost: false, roomDeleted: false };
 
@@ -64,7 +64,7 @@ export class LobbyService {
     if (room.players.length === 0) {
       this.rooms.delete(roomId);
       this.logger.log(`Room ${roomId} deleted (empty)`);
-      return { wasHost, roomDeleted: true };
+      return { roomId, wasHost, roomDeleted: true };
     }
 
     if (wasHost) {
@@ -72,7 +72,7 @@ export class LobbyService {
       this.logger.log(`${room.players[0].username} promoted to host in room ${roomId}`);
     }
 
-    return { room, wasHost, roomDeleted: false };
+    return { room, roomId, wasHost, roomDeleted: false };
   }
 
   startGame(roomId: string, gameId: string): LobbyRoom | null {
