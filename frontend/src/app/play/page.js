@@ -1,5 +1,6 @@
 'use client';
 
+import {useState} from 'react'
 import { useRouter } from 'next/navigation';
 import GameGrid from '../../components/Board';
 
@@ -26,6 +27,10 @@ const mockWords = [
 export default function PlayPage() {
     const router = useRouter();
 
+    const [words, setWords] = useState([]);
+    const [categories, setCategories] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
+
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
@@ -40,7 +45,7 @@ export default function PlayPage() {
     };
 
     // Triggered when the 'NEXT PUZZLE' button is clicked on the results screen
-    const handleNextPuzzle = () => {
+    const handleNextPuzzle = async () => {
         console.log('Requesting new puzzle data from the backend...');
 
         // TODO: Future API Implementation
@@ -48,6 +53,27 @@ export default function PlayPage() {
         // 2. Fetch new words and categories from backend
         // 3. Update the state with new data
         // 4. Set isLoading state back to false
+
+        try {
+            const response = await fetch("http://localhost:3000/game/generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    topic : 'General',
+                    difficulty : 'Hard',
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to generate game");
+            }
+
+            const data = await response.json();
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     // Triggered when the user clicks the 'LOBBY' button (header or results screen)
