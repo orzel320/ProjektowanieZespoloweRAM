@@ -7,12 +7,9 @@ import AuthModal from '@/components/AuthModal';
 export default function MainMenu() {
     const router = useRouter();
 
-    const [login, setLogin] = useState("");
-    const [password, setPassword] = useState("");
-
     const [loggedUser, setLoggedUser] = useState(null);
 
-    const handleLogin = async () => {
+    const handleLogin = async (username, password) => {
         try {
             const response = await fetch("http://localhost:3001/auth/login", {
                 method: "POST",
@@ -20,7 +17,7 @@ export default function MainMenu() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    username: login,
+                    username: username,
                     password: password,
                 }),
             });
@@ -37,7 +34,7 @@ export default function MainMenu() {
     };
 
 
-    const handleRegister = async () => {
+    const handleRegister = async (username, password) => {
         try {
             const response = await fetch("http://localhost:3001/auth/register", {
                 method: "POST",
@@ -45,7 +42,7 @@ export default function MainMenu() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    username: login,
+                    username: username,
                     password: password,
                 }),
             });
@@ -63,14 +60,14 @@ export default function MainMenu() {
     const [showAuthError, setShowAuthError] = useState(false);
     const [selectedMode, setSelectedMode] = useState('BR');
 
-    const handleLoginSuccess = (username) => {
-        handleLogin();
+    const handleLoginSuccess = (username, password) => {
+        handleLogin(username, password);
         setUser({ name: username });
         setIsAuthModalOpen(false);
     };
 
-    const handleRegisterSuccess = (username) => {
-        handleRegister();
+    const handleRegisterSuccess = (username, password) => {
+        handleRegister(username, password);
         setUser({ name: username });
         setIsAuthModalOpen(false);
     };
