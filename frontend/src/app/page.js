@@ -10,6 +10,8 @@ export default function MainMenu() {
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
 
+    const [loggedUser, setLoggedUser] = useState(null);
+
     const handleLogin = async () => {
         try {
             const response = await fetch("http://localhost:3001/auth/login", {
@@ -25,6 +27,9 @@ export default function MainMenu() {
 
             const data = await response.json();
             console.log(data);
+            if(data.success) {
+                await handleMe();
+            }
 
         } catch (error) {
             console.error("Login error:", error);
@@ -59,6 +64,13 @@ export default function MainMenu() {
     const [selectedMode, setSelectedMode] = useState('BR');
 
     const handleLoginSuccess = (username) => {
+        handleLogin();
+        setUser({ name: username });
+        setIsAuthModalOpen(false);
+    };
+
+    const handleRegisterSuccess = (username) => {
+        handleRegister();
         setUser({ name: username });
         setIsAuthModalOpen(false);
     };
@@ -69,6 +81,25 @@ export default function MainMenu() {
             setTimeout(() => setShowAuthError(false), 3000);
         } else {
             router.push(path);
+        }
+    };
+
+    const handleMe = async () => {
+        try {
+            const response = await fetch("http://localhost:3001/auth/me", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            });
+
+            const data = await response.json();
+            console.log(data);
+            setLoggedUser(data.username);
+
+        } catch (error) {
+            console.error("Login error:", error);
         }
     };
 
@@ -90,42 +121,6 @@ export default function MainMenu() {
                     className="max-w-3xl mx-auto px-4 flex flex-col justify-center items-center relative gap-4"
                     style={{ minHeight: '60vh' }}
                 >
-                    <input
-                        type="text"
-                        placeholder="Login"
-                        value={login}
-                        onChange={(e) => setLogin(e.target.value)}
-                        className="w-80 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-80 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-
-                    <button
-                        onClick={handleLogin}
-                        className="px-6 py-2 font-bold text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                        LOGIN
-                    </button>
-
-                    <button
-                        onClick={handleRegister}
-                        className="px-6 py-2 font-bold text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                        CREATE NEW ACCOUNT
-                    </button>
-
-                    <button
-                        className="px-16 py-6 text-4xl sm:text-6xl rounded-3xl font-black bg-emerald-500 text-white shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all"
-                        onClick={() => router.push('/play')}
-                    >
-                        PLAY
-                    </button>
                 </div>
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-6 z-20 bg-white/40 backdrop-blur-xl border-b border-green-100/50 sticky top-0">
@@ -243,6 +238,7 @@ export default function MainMenu() {
                 isOpen={isAuthModalOpen}
                 onClose={() => setIsAuthModalOpen(false)}
                 onLoginSuccess={handleLoginSuccess}
+                onRegisterSuccess={handleRegisterSuccess}
             />
         </main>
     );

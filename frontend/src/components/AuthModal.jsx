@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
+export default function AuthModal({ isOpen, onClose, onLoginSuccess, onRegisterSuccess }) {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -15,7 +15,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 1000));
         setIsLoading(false);
-        onLoginSuccess(username);
+        isLogin ? onLoginSuccess(username) : onRegisterSuccess(username);
         onClose();
     };
 
