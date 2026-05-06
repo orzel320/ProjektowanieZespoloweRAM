@@ -1,11 +1,62 @@
 'use client';
 
-import { useState } from 'react';
+import {useState, useEffect} from 'react'
 import { useRouter } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 
 export default function MainMenu() {
     const router = useRouter();
+
+    const [login, setLogin] = useState("");
+    const [password, setPassword] = useState("");
+
+    const [loggedUser, setLoggedUser] = useState(null);
+
+    const handleLogin = async () => {
+        try {
+            const response = await fetch("http://localhost:3001/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: login,
+                    password: password,
+                }),
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if(data.success) {
+                await handleMe();
+            }
+
+        } catch (error) {
+            console.error("Login error:", error);
+        }
+    };
+
+
+    const handleRegister = async () => {
+        try {
+            const response = await fetch("http://localhost:3001/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: login,
+                    password: password,
+                }),
+            });
+
+            const data = await response.json();
+            console.log(data);
+
+        } catch (error) {
+            console.error("Login error:", error);
+        }
+    };
 
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [user, setUser] = useState(null); // null если не залогинен
@@ -13,6 +64,13 @@ export default function MainMenu() {
     const [selectedMode, setSelectedMode] = useState('BR');
 
     const handleLoginSuccess = (username) => {
+        handleLogin();
+        setUser({ name: username });
+        setIsAuthModalOpen(false);
+    };
+
+    const handleRegisterSuccess = (username) => {
+        handleRegister();
         setUser({ name: username });
         setIsAuthModalOpen(false);
     };
@@ -26,12 +84,44 @@ export default function MainMenu() {
         }
     };
 
+    const handleMe = async () => {
+        try {
+            const response = await fetch("http://localhost:3001/auth/me", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            });
+
+            const data = await response.json();
+            console.log(data);
+            setLoggedUser(data.username);
+
+        } catch (error) {
+            console.error("Login error:", error);
+        }
+    };
+
     return (
         <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
             {/* Декоративные фоновые градиенты */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-200/40 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-[-10%] right-[-5%] w-[30%] h-[40%] bg-emerald-200/30 rounded-full blur-[100px] pointer-events-none"></div>
 
+                <header className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm mb-8">
+                    <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center relative">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <h1 className="text-xl font-black">CONNECTIONS<span className="text-emerald-500">++</span></h1>
+                        </div>
+                    </div>
+                </header>
+
+                <div
+                    className="max-w-3xl mx-auto px-4 flex flex-col justify-center items-center relative gap-4"
+                    style={{ minHeight: '60vh' }}
+                >
+                </div>
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-6 z-20 bg-white/40 backdrop-blur-xl border-b border-green-100/50 sticky top-0">
                 <div className="text-2xl font-black tracking-tight">
@@ -148,6 +238,7 @@ export default function MainMenu() {
                 isOpen={isAuthModalOpen}
                 onClose={() => setIsAuthModalOpen(false)}
                 onLoginSuccess={handleLoginSuccess}
+                onRegisterSuccess={handleRegisterSuccess}
             />
         </main>
     );
