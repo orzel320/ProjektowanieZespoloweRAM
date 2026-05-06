@@ -15,7 +15,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, onRegisterS
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 1000));
         setIsLoading(false);
-        isLogin ? onLoginSuccess(username) : onRegisterSuccess(username);
+        isLogin ? onLoginSuccess(username, password) : onRegisterSuccess(username, password);
         onClose();
     };
 
