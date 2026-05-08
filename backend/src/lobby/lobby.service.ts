@@ -1,8 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import type { LobbyPlayer, LobbyPublicRoom, LobbyRoom } from './lobby.types';
+import type {
+  LobbyPlayer,
+  LobbyPublicRoom,
+  LobbyRoom,
+  LobbyRoomConfig,
+} from './lobby.types';
 
 const DEFAULT_MAX_PLAYERS = 8;
+
+const DEFAULT_CONFIG: LobbyRoomConfig = {
+  mode: 'BR',
+  roundDurationMs: 60_000,
+  difficulty: 'Medium',
+  maxRounds: 5,
+  playersEliminatedPerRound: 1,
+};
 
 @Injectable()
 export class LobbyService {
@@ -12,13 +25,18 @@ export class LobbyService {
 
   private readonly socketToRoom = new Map<string, string>();
 
-  createRoom(host: Omit<LobbyPlayer, 'isHost'>, maxPlayers = DEFAULT_MAX_PLAYERS): LobbyRoom {
+  createRoom(
+    host: Omit<LobbyPlayer, 'isHost'>,
+    maxPlayers = DEFAULT_MAX_PLAYERS,
+    config: Partial<LobbyRoomConfig> = {},
+  ): LobbyRoom {
     const roomId = uuidv4();
     const room: LobbyRoom = {
       roomId,
       status: 'waiting',
       players: [{ ...host, isHost: true }],
       maxPlayers,
+      config: { ...DEFAULT_CONFIG, ...config },
       createdAt: new Date(),
     };
     this.rooms.set(roomId, room);
@@ -113,6 +131,7 @@ export class LobbyService {
       playerCount: room.players.length,
       maxPlayers: room.maxPlayers,
       players: room.players.map(({ userId, username, isHost }) => ({ userId, username, isHost })),
+      config: room.config,
       gameId: room.gameId,
     };
   }
