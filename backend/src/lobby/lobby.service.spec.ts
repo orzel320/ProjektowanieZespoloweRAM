@@ -40,6 +40,27 @@ describe('LobbyService', () => {
       expect(room.maxPlayers).toBe(4);
     });
 
+    it('should fill in default config when none is provided', () => {
+      const room = service.createRoom(makePlayer());
+      expect(room.config.mode).toBe('BR');
+      expect(room.config.difficulty).toBe('Medium');
+      expect(room.config.roundDurationMs).toBeGreaterThan(0);
+      expect(room.config.maxRounds).toBeGreaterThan(0);
+    });
+
+    it('should merge partial config with defaults', () => {
+      const room = service.createRoom(makePlayer(), 2, {
+        mode: '1v1',
+        difficulty: 'Hard',
+        maxRounds: 1,
+      });
+      expect(room.config.mode).toBe('1v1');
+      expect(room.config.difficulty).toBe('Hard');
+      expect(room.config.maxRounds).toBe(1);
+      // unspecified field still picks default
+      expect(room.config.roundDurationMs).toBeGreaterThan(0);
+    });
+
     it('should make the room retrievable by socket', () => {
       const host = makePlayer({ socketId: 'socket-host' });
       const room = service.createRoom(host);

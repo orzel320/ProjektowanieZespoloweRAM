@@ -10,7 +10,9 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { BattleRoyaleService } from '../battle-royale/battle-royale.service';
 import { LobbyService } from './lobby.service';
+import type { LobbyMode } from './lobby.types';
 
 export const WS_EVENTS = {
   CREATE_ROOM: 'lobby:create_room',
@@ -40,7 +42,10 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
   private readonly logger = new Logger(LobbyGateway.name);
 
-  constructor(private readonly lobbyService: LobbyService) {}
+  constructor(
+    private readonly lobbyService: LobbyService,
+    private readonly brService: BattleRoyaleService,
+  ) {}
 
   afterInit() {
     this.logger.log('LobbyGateway initialized');
@@ -71,11 +76,31 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   @SubscribeMessage(WS_EVENTS.CREATE_ROOM)
   handleCreateRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { userId: string; username: string; maxPlayers?: number },
+    @MessageBody()
+    body: {
+      userId: string;
+      username: string;
+      maxPlayers?: number;
+      mode?: LobbyMode;
+      roundDurationMs?: number;
+      difficulty?: string;
+      topic?: string;
+      maxRounds?: number;
+      playersEliminatedPerRound?: number;
+    },
   ) {
     if (!body?.userId || !body?.username) {
       return this.emitError(client, 'userId and username are required');
     }
+
+    const config = pickDefined({
+      mode: body.mode,
+      roundDurationMs: body.roundDurationMs,
+      difficulty: body.difficulty,
+      topic: body.topic,
+      maxRounds: body.maxRounds,
+      playersEliminatedPerRound: body.playersEliminatedPerRound,
+    });
 
     const room = this.lobbyService.createRoom(
       {
@@ -85,6 +110,7 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
         joinedAt: new Date(),
       },
       body.maxPlayers,
+      config,
     );
 
     void client.join(room.roomId);
@@ -142,10 +168,10 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   @SubscribeMessage(WS_EVENTS.START_GAME)
   handleStartGame(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { roomId: string; gameId: string },
+    @MessageBody() body: { roomId: string },
   ) {
-    if (!body?.roomId || !body?.gameId) {
-      return this.emitError(client, 'roomId and gameId are required');
+    if (!body?.roomId) {
+      return this.emitError(client, 'roomId is required');
     }
 
     const room = this.lobbyService.getRoomById(body.roomId);
@@ -154,16 +180,49 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     const isHost = room.players.find((p) => p.socketId === client.id)?.isHost;
     if (!isHost) return this.emitError(client, 'Only the host can start the game');
 
-    const updated = this.lobbyService.startGame(body.roomId, body.gameId);
-    if (!updated) return this.emitError(client, 'Could not start game');
+    if (room.players.length < 2) {
+      return this.emitError(client, 'Need at least 2 players to start');
+    }
+
+    // Allow restart after a previous finished session for the same room.
+    this.brService.destroyFinishedSessionByRoom(room.roomId);
+
+    let sessionId: string;
+    try {
+      const session = this.brService.createSession({
+        roomId: room.roomId,
+        maxRounds: room.config.maxRounds,
+        roundDurationMs: room.config.roundDurationMs,
+        playersEliminatedPerRound: room.config.playersEliminatedPerRound,
+        topic: room.config.topic,
+        difficulty: room.config.difficulty,
+      });
+      sessionId = session.sessionId;
+    } catch (e: unknown) {
+      return this.emitError(client, (e as Error).message);
+    }
+
+    const updated = this.lobbyService.startGame(body.roomId, sessionId);
+    if (!updated) {
+      this.brService.destroySession(sessionId);
+      return this.emitError(client, 'Could not start game');
+    }
 
     this.server.to(body.roomId).emit(WS_EVENTS.GAME_STARTED, {
       roomId: body.roomId,
-      gameId: body.gameId,
+      gameId: sessionId,
+      sessionId,
+      mode: room.config.mode,
+      config: {
+        maxRounds: room.config.maxRounds,
+        roundDurationMs: room.config.roundDurationMs,
+        difficulty: room.config.difficulty,
+        topic: room.config.topic,
+      },
     });
 
     this.broadcastRoomsList();
-    return { success: true };
+    return { success: true, sessionId };
   }
 
   @SubscribeMessage(WS_EVENTS.LIST_ROOMS)
@@ -182,4 +241,12 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     const rooms = this.lobbyService.listWaitingRooms();
     this.server.emit(WS_EVENTS.ROOMS_LIST, rooms);
   }
+}
+
+function pickDefined<T extends Record<string, unknown>>(o: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const k in o) {
+    if (o[k] !== undefined) out[k] = o[k];
+  }
+  return out;
 }
