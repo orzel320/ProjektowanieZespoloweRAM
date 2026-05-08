@@ -20,6 +20,7 @@ export default function MainMenu() {
                     username: username,
                     password: password,
                 }),
+                credentials: 'include',
             });
 
             const data = await response.json();
@@ -45,6 +46,7 @@ export default function MainMenu() {
                     username: username,
                     password: password,
                 }),
+                credentials: 'include',
             });
 
             const data = await response.json();
@@ -92,8 +94,9 @@ export default function MainMenu() {
             });
 
             const data = await response.json();
-            console.log(data);
-            setLoggedUser(data.username);
+            if (data.authenticated) {
+                setLoggedUser(data.user.username); // Access the nested user object
+            }
 
         } catch (error) {
             console.error("Login error:", error);
