@@ -1,5 +1,16 @@
 export type LobbyStatus = 'waiting' | 'in_game' | 'finished';
 
+export type LobbyMode = '1v1' | 'BR';
+
+export interface LobbyRoomConfig {
+  mode: LobbyMode;
+  roundDurationMs: number;
+  difficulty: string;
+  topic?: string;
+  maxRounds: number;
+  playersEliminatedPerRound: number;
+}
+
 export interface LobbyPlayer {
   userId: string;
   username: string;
@@ -13,6 +24,7 @@ export interface LobbyRoom {
   status: LobbyStatus;
   players: LobbyPlayer[];
   maxPlayers: number;
+  config: LobbyRoomConfig;
   createdAt: Date;
   gameId?: string;
 }
@@ -23,5 +35,6 @@ export interface LobbyPublicRoom {
   playerCount: number;
   maxPlayers: number;
   players: Pick<LobbyPlayer, 'userId' | 'username' | 'isHost'>[];
+  config: LobbyRoomConfig;
   gameId?: string;
 }

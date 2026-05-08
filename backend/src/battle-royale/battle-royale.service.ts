@@ -17,7 +17,7 @@ const DEFAULTS = {
   COOLDOWN_MS: 5_000,          
   ELIMINATED_PER_ROUND: 1,
   TOPIC: 'General',
-  DIFFICULTY: 'medium',
+  DIFFICULTY: 'Medium',
 } as const;
 
 export type BREventEmitter = {
@@ -58,6 +58,8 @@ export class BattleRoyaleService {
       cooldownMs: config.cooldownMs ?? DEFAULTS.COOLDOWN_MS,
       playersEliminatedPerRound:
         config.playersEliminatedPerRound ?? DEFAULTS.ELIMINATED_PER_ROUND,
+      topic: config.topic ?? DEFAULTS.TOPIC,
+      difficulty: config.difficulty ?? DEFAULTS.DIFFICULTY,
       status: 'waiting',
       currentRound: 0,
       board: null,
@@ -115,10 +117,19 @@ export class BattleRoyaleService {
     this.logger.log(`BR session ${sessionId} destroyed`);
   }
 
+  destroyFinishedSessionByRoom(roomId: string): void {
+    const sid = this.roomToSession.get(roomId);
+    if (!sid) return;
+    const session = this.sessions.get(sid);
+    if (session && session.status === 'finished') {
+      this.destroySession(sid);
+    }
+  }
+
   async startNextRound(
     sessionId: string,
-    topic: string | undefined = DEFAULTS.TOPIC,
-    difficulty: string | undefined = DEFAULTS.DIFFICULTY,
+    topic?: string,
+    difficulty?: string,
   ): Promise<BRPublicRound> {
     const session = this.getOrThrow(sessionId);
 
@@ -133,7 +144,10 @@ export class BattleRoyaleService {
 
     session.currentRound += 1;
 
-    const rawBoard = await this.boardsService.generate(topic, difficulty);
+    const rawBoard = await this.boardsService.generate(
+      topic ?? session.topic,
+      difficulty ?? session.difficulty,
+    );
     session.board = this.parseBoard(rawBoard);
 
     for (const p of session.players.values()) {

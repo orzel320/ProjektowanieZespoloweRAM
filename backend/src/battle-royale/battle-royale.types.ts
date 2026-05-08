@@ -19,17 +19,20 @@ export interface BRSession {
   roomId: string;
 
   maxRounds: number;
-  roundDurationMs: number;         
-  cooldownMs: number;              
-  playersEliminatedPerRound: number; 
+  roundDurationMs: number;
+  cooldownMs: number;
+  playersEliminatedPerRound: number;
+
+  topic: string;
+  difficulty: string;
 
   status: BRSessionStatus;
   currentRound: number;
-  board: BoardPayload | null;      
+  board: BoardPayload | null;
   roundStartedAt: Date | null;
   roundEndsAt: Date | null;
 
-  players: Map<string, BRPlayerState>; 
+  players: Map<string, BRPlayerState>;
   roundTimer: ReturnType<typeof setTimeout> | null;
 }
 
