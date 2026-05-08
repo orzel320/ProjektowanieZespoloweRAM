@@ -5,9 +5,17 @@ import { useRouter } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 
 export default function MainMenu() {
+
     const router = useRouter();
 
     const [loggedUser, setLoggedUser] = useState(null);
+
+    useEffect(() => {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        }
+    }, []);
 
     const handleLogin = async (username, password) => {
         try {
@@ -56,13 +64,15 @@ export default function MainMenu() {
     };
 
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [user, setUser] = useState(null); // null если не залогинен
+    const [user, setUser] = useState(null);
     const [showAuthError, setShowAuthError] = useState(false);
     const [selectedMode, setSelectedMode] = useState('BR');
 
-    const handleLoginSuccess = (username, password) => {
-        handleLogin(username, password);
-        setUser({ name: username });
+    const handleLoginSuccess = (username) => {
+        if (!username) return;
+        const userData = { name: username };
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
         setIsAuthModalOpen(false);
     };
 
@@ -100,6 +110,11 @@ export default function MainMenu() {
         }
     };
 
+    const handleLogout = () => {
+        setUser(null);
+        localStorage.removeItem('user');
+    };
+
     return (
         <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-200/40 rounded-full blur-[120px] pointer-events-none"></div>
@@ -120,15 +135,23 @@ export default function MainMenu() {
                 </div>*/}
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-6 z-20 bg-white/40 backdrop-blur-xl border-b border-green-100/50 sticky top-0">
-                <div className="text-2xl font-black tracking-tight">
+                <div className="text-2xl font-black tracking-tight flex items-center leading-none">
                     connections<span className="text-emerald-500">++</span>
                 </div>
 
                 <div className="flex items-center gap-4">
                     {user ? (
-                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-emerald-100 shadow-sm">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span className="text-xs font-black text-gray-600 uppercase tracking-widest">@{user.name}</span>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-emerald-100 shadow-sm">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span className="text-xs font-black text-gray-600 uppercase tracking-widest">@{user.name}</span>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="ml-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 border border-transparent hover:border-red-100 hover:bg-red-50 rounded-xl transition-all"
+                            >
+                                Logout
+                            </button>
                         </div>
                     ) : (
                         <button
