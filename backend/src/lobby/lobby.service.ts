@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
 import type { LobbyPlayer, LobbyPublicRoom, LobbyRoom } from './lobby.types';
 
 const DEFAULT_MAX_PLAYERS = 8;
@@ -12,8 +11,17 @@ export class LobbyService {
 
   private readonly socketToRoom = new Map<string, string>();
 
+  private generateShortRoomCode(): string {
+    let id: string;
+    do {
+      id = Math.random().toString(36).substring(2, 8).toUpperCase();
+    } while (this.rooms.has(id));
+    return id;
+  }
+
   createRoom(host: Omit<LobbyPlayer, 'isHost'>, maxPlayers = DEFAULT_MAX_PLAYERS): LobbyRoom {
-    const roomId = uuidv4();
+    const roomId = this.generateShortRoomCode();
+
     const room: LobbyRoom = {
       roomId,
       status: 'waiting',
@@ -28,8 +36,8 @@ export class LobbyService {
   }
 
   joinRoom(
-    roomId: string,
-    player: Omit<LobbyPlayer, 'isHost'>,
+      roomId: string,
+      player: Omit<LobbyPlayer, 'isHost'>,
   ): { success: boolean; room?: LobbyRoom; error?: string } {
     const room = this.rooms.get(roomId);
     if (!room) return { success: false, error: 'Room not found' };
@@ -102,8 +110,8 @@ export class LobbyService {
 
   listWaitingRooms(): LobbyPublicRoom[] {
     return [...this.rooms.values()]
-      .filter((r) => r.status === 'waiting')
-      .map((r) => this.toPublic(r));
+        .filter((r) => r.status === 'waiting')
+        .map((r) => this.toPublic(r));
   }
 
   toPublic(room: LobbyRoom): LobbyPublicRoom {

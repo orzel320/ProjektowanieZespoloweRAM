@@ -1,5 +1,6 @@
 'use client';
 
+import { io } from 'socket.io-client';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -40,9 +41,8 @@ function CreateRoomContent() {
     };
 
     const handleCreate = () => {
-        const fakeRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
         const modeParam = mode === '1v1' ? '1v1' : 'BR';
-        router.push(`/lobby/${fakeRoomId}?mode=${modeParam}`);
+        router.push(`/lobby/create?mode=${modeParam}&limit=${playerLimit}&time=${roundTime}&diff=${difficulty}`);
     };
 
     return (

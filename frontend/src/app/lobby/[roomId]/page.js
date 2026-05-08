@@ -1,75 +1,150 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { io } from 'socket.io-client';
 
-export default function LobbyPage() {
+function LobbyContent() {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    const roomId = params?.roomId || 'A7K9PD';
+    const [currentRoomId, setCurrentRoomId] = useState(params?.roomId);
+
     const mode = searchParams.get('mode') === '1v1' ? '1v1' : 'BR';
-
     const [user, setUser] = useState(null);
+    const [players, setPlayers] = useState([]);
+    const [roomConfig, setRoomConfig] = useState(null);
     const [copied, setCopied] = useState(false);
+    const socketRef = useRef(null);
 
-    const [players, setPlayers] = useState(
-        mode === '1v1'
-            ? [
-                { id: 1, username: 'Player', isHost: true, isMe: true },
-                { id: 2, username: 'magda_x', isHost: false, isMe: false }
-            ]
-            : [
-                { id: 1, username: 'Player', isHost: true, isMe: true },
-                { id: 2, username: 'magda_x', isHost: false, isMe: false },
-                { id: 3, username: 'tomek_3', isHost: false, isMe: false },
-                { id: 4, username: 'ola.k', isHost: false, isMe: false },
-                { id: 5, username: 'piotr77', isHost: false, isMe: false },
-                { id: 6, username: 'ania', isHost: false, isMe: false },
-                { id: 7, username: 'zenek', isHost: false, isMe: false },
-                { id: 8, username: 'mariusz', isHost: false, isMe: false },
-                { id: 9, username: 'kasia_r', isHost: false, isMe: false },
-            ]
-    );
+    const maxPlayers = mode === '1v1' ? 2 : (Number(searchParams.get('limit')) || 20);
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-            const parsedUser = JSON.parse(savedUser);
-            setUser(parsedUser);
-            setPlayers(prevPlayers =>
-                prevPlayers.map(p =>
-                    p.isMe ? { ...p, username: parsedUser.name } : p
-                )
-            );
+        if (!savedUser) {
+            router.push('/');
+            return;
         }
-    }, []);
+        const currentUser = JSON.parse(savedUser);
+        setUser(currentUser);
 
-    const maxPlayers = mode === '1v1' ? 2 : 20;
+        socketRef.current = io('http://localhost:3001/lobby', {
+            transports: ['websocket'],
+        });
+
+        const socket = socketRef.current;
+
+        socket.on('connect', () => {
+            console.log('Connected to lobby socket');
+
+            if (params?.roomId === 'create') {
+                socket.emit('lobby:create_room', {
+                    userId: currentUser.id || currentUser.name,
+                    username: currentUser.name,
+                    mode: searchParams.get('mode') === '1v1' ? '1v1' : 'BR',
+                    maxPlayers: Number(searchParams.get('limit')) || 20,
+                    roundDurationMs: (Number(searchParams.get('time')) || 60) * 1000,
+                    difficulty: searchParams.get('diff') || 'Medium'
+                });
+            } else {
+                socket.emit('lobby:join_room', {
+                    roomId: params?.roomId,
+                    userId: currentUser.id || currentUser.name,
+                    username: currentUser.name
+                });
+            }
+        });
+
+        socket.on('lobby:room_created', (data) => {
+            console.log('Room created by backend:', data);
+
+            if (!data) return;
+
+            const newRoomId = data.roomId;
+            const newMode = data.config?.mode || mode;
+
+            setCurrentRoomId(newRoomId);
+
+
+            window.history.replaceState(null, '', `/lobby/${newRoomId}?mode=${newMode}`);
+
+            if (data.players) {
+                const initialPlayers = data.players.map(p => ({
+                    id: p.userId,
+                    username: p.username,
+                    isHost: p.isHost,
+                    isMe: p.userId === (currentUser.id || currentUser.name)
+                }));
+                setPlayers(initialPlayers);
+            }
+
+            if (data.config) {
+                setRoomConfig(data.config);
+            }
+        });
+
+        socket.on('lobby:room_updated', (data) => {
+            console.log('Room updated:', data);
+
+            if (!data) return;
+
+            if (data.players) {
+                const updatedPlayers = data.players.map(p => ({
+                    id: p.userId,
+                    username: p.username,
+                    isHost: p.isHost,
+                    isMe: p.userId === (currentUser.id || currentUser.name)
+                }));
+                setPlayers(updatedPlayers);
+            }
+
+            if (data.config) {
+                setRoomConfig(data.config);
+            }
+
+            if (data.roomId) setCurrentRoomId(data.roomId);
+        });
+
+        socket.on('lobby:game_started', (data) => {
+            router.push(`/play?sessionId=${data.sessionId}`);
+        });
+
+        socket.on('lobby:error', (err) => {
+            alert(err.message);
+            router.push('/join-room');
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router]);
 
     const handleCopyCode = () => {
-        navigator.clipboard.writeText(roomId);
+        if (currentRoomId === 'create') return;
+        navigator.clipboard.writeText(currentRoomId);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleKick = (id) => {
-        setPlayers(players.filter(player => player.id !== id));
+    const handleStartGame = () => {
+        if (socketRef.current && currentRoomId !== 'create') {
+            socketRef.current.emit('lobby:start_game', { roomId: currentRoomId });
+        }
     };
 
     const handleLeave = () => {
         router.push('/');
     };
 
+    if (!user) return null;
+
     return (
         <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
-            {/* Background elements */}
             <div className="absolute top-[-5%] right-[-5%] w-[40%] h-[40%] bg-emerald-200/20 rounded-full blur-[110px] pointer-events-none"></div>
             <div className="absolute bottom-[-5%] left-[-5%] w-[35%] h-[35%] bg-green-200/20 rounded-full blur-[110px] pointer-events-none"></div>
 
-            {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/50 backdrop-blur-xl border-b border-emerald-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
                     <button onClick={handleLeave} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-[11px] uppercase">
@@ -79,15 +154,12 @@ export default function LobbyPage() {
                         <span className="text-gray-800 font-black">connections<span className="text-emerald-500 font-black">++</span></span>
                     </div>
                 </div>
-                <div className="text-[10px] font-black text-emerald-600 bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-emerald-50 uppercase tracking-[0.2em]">
-                    @{user?.name || 'guest'}
+                <div className="text-[10px] font-black text-emerald-600 bg-white px-4 py-2 rounded-2xl shadow-sm border border-emerald-50 uppercase tracking-widest">
+                    @{user.name}
                 </div>
             </header>
 
-            {/* Main Content */}
             <div className="flex-1 w-full max-w-[1300px] mx-auto flex flex-col md:flex-row">
-
-                {/* Left Section: Players */}
                 <div className="flex-1 p-8 md:p-12 border-r border-dashed border-emerald-100">
                     <div className="flex justify-between items-end mb-10">
                         <div>
@@ -101,44 +173,26 @@ export default function LobbyPage() {
                         </div>
                     </div>
 
-                    {mode === 'BR' && (
-                        <div className="w-full h-2 bg-gray-100 rounded-full mb-10 overflow-hidden shadow-inner">
-                            <div
-                                className="h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-700 ease-out"
-                                style={{ width: `${(players.length / maxPlayers) * 100}%` }}
-                            ></div>
-                        </div>
-                    )}
-
                     <div className={`grid gap-4 ${mode === 'BR' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 max-w-md'}`}>
                         {players.map((p) => (
                             <div key={p.id} className={`group flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 ${
-                                p.isMe ? 'bg-white border-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-white border-gray-100 hover:border-emerald-200 hover:shadow-md'
+                                p.isMe ? 'bg-white border-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-white border-gray-100'
                             }`}>
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-base shadow-sm ${
-                                        p.isMe ? 'bg-emerald-500 text-white' : 'bg-gray-50 text-gray-400 border border-gray-100'
+                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-base ${
+                                        p.isMe ? 'bg-emerald-500 text-white' : 'bg-gray-50 text-gray-400'
                                     }`}>
                                         {p.username[0].toUpperCase()}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-gray-800 text-base tracking-tight">{p.username}</span>
+                                        <span className="font-bold text-gray-800 text-base">{p.username}</span>
                                         {p.isHost && <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Host</span>}
                                     </div>
                                 </div>
-                                {!p.isMe && (
-                                    <button
-                                        onClick={() => handleKick(p.id)}
-                                        className="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 border border-transparent hover:border-red-100"
-                                    >
-                                        <span className="text-2xl font-light">×</span>
-                                    </button>
-                                )}
                             </div>
                         ))}
                     </div>
 
-                    {/* Bottom Settings Summary */}
                     <div className="mt-16 flex gap-12 border-t border-emerald-50 pt-8">
                         <div>
                             <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Game Mode</p>
@@ -146,45 +200,63 @@ export default function LobbyPage() {
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Round Time</p>
-                            <p className="text-base font-black text-gray-700">45 seconds</p>
+                            <p className="text-base font-black text-gray-700">{roomConfig?.roundDurationMs / 1000 || 60} seconds</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Section: Actions */}
                 <div className="w-full md:w-[400px] p-8 md:p-12 flex flex-col justify-start bg-white/20">
                     <div className="mb-14">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4">Invite Link</p>
-                        <div className="bg-white border-2 border-emerald-50 rounded-3xl p-8 shadow-sm flex flex-col items-center gap-6 group hover:border-emerald-200 transition-all">
-                            <span className="text-5xl font-black text-gray-800 tracking-[0.1em]">{roomId}</span>
+                        <div className="bg-white border-2 border-emerald-50 rounded-3xl p-8 shadow-sm flex flex-col items-center gap-6">
+
+                            <span className="text-3xl font-black text-gray-800 tracking-[0.1em] text-center break-all">
+                                {currentRoomId === 'create' ? 'Создание...' : currentRoomId}
+                            </span>
+
                             <button
                                 onClick={handleCopyCode}
-                                className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-sm ${
-                                    copied ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-gray-900 text-white hover:bg-black'
-                                }`}
+                                disabled={currentRoomId === 'create'}
+                                className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                                    copied ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white'
+                                } disabled:opacity-50`}
                             >
-                                {copied ? 'Copied to clipboard' : 'Copy Code'}
+                                {copied ? 'Copied!' : 'Copy Code'}
                             </button>
                         </div>
                     </div>
 
-                    {/* Main Action Buttons */}
                     <div className="flex flex-col gap-4">
-                        <button className="w-full py-6 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-2xl uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0">
-                            Start Game
-                        </button>
+                        {players.find(p => p.isMe)?.isHost && (
+                            <button
+                                onClick={handleStartGame}
+                                disabled={currentRoomId === 'create'}
+                                className="w-full py-6 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-2xl uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0"
+                            >
+                                Start Game
+                            </button>
+                        )}
                         <button
                             onClick={handleLeave}
-                            className="w-full py-4 bg-white border-2 border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50/30 transition-all text-xs font-black uppercase tracking-[0.2em] rounded-xl"
+                            className="w-full py-4 bg-white border-2 border-gray-100 text-gray-400 font-black uppercase tracking-[0.2em] rounded-xl hover:text-red-500"
                         >
                             Leave Room
                         </button>
                     </div>
-                    <p className="text-[10px] text-gray-400 font-medium italic mt-8 text-center px-4">
-                        The game will start for all players once you press the green button.
-                    </p>
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function LobbyPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-[#FAFCF8] text-emerald-500 font-bold tracking-widest uppercase">
+                Загрузка комнаты...
+            </div>
+        }>
+            <LobbyContent />
+        </Suspense>
     );
 }
