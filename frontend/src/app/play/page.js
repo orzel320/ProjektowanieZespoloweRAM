@@ -1,5 +1,6 @@
 'use client';
 
+import {useState} from 'react'
 import { useRouter } from 'next/navigation';
 import GameGrid from '../../components/Board';
 
@@ -26,6 +27,12 @@ const mockWords = [
 export default function PlayPage() {
     const router = useRouter();
 
+    const [gameId, setGameId] = useState('');
+
+    const [words, setWords] = useState(mockWords);
+    const [categories, setCategories] = useState(mockCategories);
+    const [isLoading, setIsLoading] = useState(true);
+
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
@@ -40,7 +47,7 @@ export default function PlayPage() {
     };
 
     // Triggered when the 'NEXT PUZZLE' button is clicked on the results screen
-    const handleNextPuzzle = () => {
+    const handleNextPuzzle = async () => {
         console.log('Requesting new puzzle data from the backend...');
 
         // TODO: Future API Implementation
@@ -48,6 +55,51 @@ export default function PlayPage() {
         // 2. Fetch new words and categories from backend
         // 3. Update the state with new data
         // 4. Set isLoading state back to false
+
+        try {
+            const response = await fetch("http://localhost:3001/game/generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    topic : 'General',
+                    difficulty : 'Hard',
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to generate game");
+            }
+
+            const data = await response.json();
+            setGameId(data.gameId);
+        } catch (error) {
+            console.error(error);
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3001/game/${gameID}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    topic : 'General',
+                    difficulty : 'Hard',
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to generate game");
+            }
+
+            const data = await response.json();
+            setCategories(data.revealedCategories.categories);
+            setWords(data.revealedCategories.words);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     // Triggered when the user clicks the 'LOBBY' button (header or results screen)
@@ -64,12 +116,13 @@ export default function PlayPage() {
     return (
         <main className="min-h-screen bg-slate-50">
             <GameGrid
-                words={mockWords}
-                categories={mockCategories}
+                words={words}
+                categories={categories}
                 isLoading={false} // Update this with actual loading state once API is connected
                 onGameComplete={handleGameComplete}
                 onNextPuzzle={handleNextPuzzle}
                 onLobbyClick={handleLobbyClick}
+                onInitGame={handleNextPuzzle}
             />
         </main>
     );
