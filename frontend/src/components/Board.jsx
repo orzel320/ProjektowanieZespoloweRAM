@@ -8,7 +8,8 @@ export default function GameGrid({
                                      isLoading = false,
                                      onGameComplete,
                                      onNextPuzzle,
-                                     onLobbyClick
+                                     onLobbyClick,
+                                     onInitGame,
                                  }) {
     // ==========================================
     // STATE DECLARATIONS
@@ -39,6 +40,7 @@ export default function GameGrid({
     // 1. Initialize words
     // Shuffles the words array whenever new words are passed via props
     useEffect(() => {
+        onInitGame();
         if (words.length > 0) {
             setDisplayWords([...words].sort(() => Math.random() - 0.5));
         }
