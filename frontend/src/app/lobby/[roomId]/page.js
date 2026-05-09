@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 
@@ -12,15 +12,17 @@ export default function LobbyPage() {
     const roomId = params?.roomId || 'A7K9PD';
     const mode = searchParams.get('mode') === '1v1' ? '1v1' : 'BR';
 
+    const [user, setUser] = useState(null);
     const [copied, setCopied] = useState(false);
+
     const [players, setPlayers] = useState(
         mode === '1v1'
             ? [
-                { id: 1, username: 'kacper92', isHost: true, isMe: true },
+                { id: 1, username: 'Player', isHost: true, isMe: true },
                 { id: 2, username: 'magda_x', isHost: false, isMe: false }
             ]
             : [
-                { id: 1, username: 'kacper92', isHost: true, isMe: true },
+                { id: 1, username: 'Player', isHost: true, isMe: true },
                 { id: 2, username: 'magda_x', isHost: false, isMe: false },
                 { id: 3, username: 'tomek_3', isHost: false, isMe: false },
                 { id: 4, username: 'ola.k', isHost: false, isMe: false },
@@ -31,6 +33,19 @@ export default function LobbyPage() {
                 { id: 9, username: 'kasia_r', isHost: false, isMe: false },
             ]
     );
+
+    useEffect(() => {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            setPlayers(prevPlayers =>
+                prevPlayers.map(p =>
+                    p.isMe ? { ...p, username: parsedUser.name } : p
+                )
+            );
+        }
+    }, []);
 
     const maxPlayers = mode === '1v1' ? 2 : 20;
 
@@ -50,7 +65,7 @@ export default function LobbyPage() {
 
     return (
         <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
-            {/* Background elements with slightly more saturation */}
+            {/* Background elements */}
             <div className="absolute top-[-5%] right-[-5%] w-[40%] h-[40%] bg-emerald-200/20 rounded-full blur-[110px] pointer-events-none"></div>
             <div className="absolute bottom-[-5%] left-[-5%] w-[35%] h-[35%] bg-green-200/20 rounded-full blur-[110px] pointer-events-none"></div>
 
@@ -64,7 +79,9 @@ export default function LobbyPage() {
                         <span className="text-gray-800 font-black">connections<span className="text-emerald-500 font-black">++</span></span>
                     </div>
                 </div>
-                <div className="text-xs font-bold text-gray-500 px-4 py-2 rounded-2xl bg-white shadow-sm border border-emerald-50">@kacper92</div>
+                <div className="text-[10px] font-black text-emerald-600 bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-emerald-50 uppercase tracking-[0.2em]">
+                    @{user?.name || 'guest'}
+                </div>
             </header>
 
             {/* Main Content */}
