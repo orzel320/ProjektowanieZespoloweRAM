@@ -253,7 +253,7 @@ export default function LobbyPage() {
     return (
         <Suspense fallback={
             <div className="flex min-h-screen items-center justify-center bg-[#FAFCF8] text-emerald-500 font-bold tracking-widest uppercase">
-                Загрузка комнаты...
+                Room loading...
             </div>
         }>
             <LobbyContent />
