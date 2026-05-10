@@ -40,9 +40,15 @@ function CreateRoomContent() {
     };
 
     const handleCreate = () => {
-        const fakeRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
         const modeParam = mode === '1v1' ? '1v1' : 'BR';
-        router.push(`/lobby/${fakeRoomId}?mode=${modeParam}`);
+        const params = new URLSearchParams({
+            create: '1',
+            mode: modeParam,
+            maxPlayers: String(playerLimit),
+            roundDurationMs: String(roundTime * 1000),
+            difficulty,
+        });
+        router.push(`/lobby/new?${params.toString()}`);
     };
 
     return (

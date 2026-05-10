@@ -122,7 +122,7 @@ export default function JoinRoomPage() {
                             value={roomCode}
                             onChange={(e) => setRoomCode(e.target.value.toUpperCase())} // Сразу в верхний регистр
                             placeholder="6-DIGIT CODE"
-                            maxLength={10}
+                            maxLength={6}
                             className={`flex-1 h-20 bg-white border-2 rounded-3xl px-8 text-3xl font-black text-gray-800 tracking-[0.3em] uppercase focus:outline-none transition-all shadow-sm ${error ? 'border-red-200 bg-red-50/30' : 'border-gray-100 focus:border-emerald-400'}`}
                         />
                         <button
