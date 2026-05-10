@@ -2,7 +2,7 @@
 
 import {useState} from 'react'
 import { useRouter } from 'next/navigation';
-import GameGrid from '../../components/Board';
+import GameGrid from '../../../components/Board';
 
 // ==========================================
 // MOCK DATA (To be replaced with API calls)
