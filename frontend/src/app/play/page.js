@@ -114,6 +114,7 @@ export default function PlayPage() {
     return (
         <main className="min-h-screen bg-slate-50">
             <GameGrid
+                gameId={gameId}
                 words={words}
                 categories={categories}
                 isLoading={isLoading}
