@@ -28,7 +28,6 @@ def test_evaluate_board_metrics():
     print(f"Inter-group (spodziewane niskie, ok. 0.1): {metrics['inter_group']:.4f}")
     print(f"Difficulty score: {metrics['difficulty_score']:.4f}")
     
-    # Podstawowe asercje
     assert metrics["intra_group"] > 0.8, "Podobieństwo wewnątrz grupy powinno być wysokie."
     assert metrics["inter_group"] < 0.3, "Podobieństwo między grupami powinno być niskie."
     assert metrics["difficulty_score"] < 0, "Łatwa plansza powinna mieć ujemny/niski wskaźnik trudności."

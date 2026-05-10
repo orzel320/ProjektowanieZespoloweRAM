@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch, MagicMock
 from src.generation.adaptive import AdaptiveBoardGenerator
 
-# Proste klasy imitujące strukturę planszy
 class MockCategory:
     def __init__(self, words):
         self.words = words

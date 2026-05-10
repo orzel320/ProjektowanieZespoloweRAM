@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import {useState} from 'react'
 import { useRouter } from 'next/navigation';
-import GameGrid from '../../components/Board';
+import GameGrid from '../../../components/Board';
 
 // ==========================================
 // MOCK DATA (To be replaced with API calls)
@@ -28,24 +28,33 @@ export default function PlayPage() {
     const router = useRouter();
 
     const [gameId, setGameId] = useState('');
+
     const [words, setWords] = useState(mockWords);
     const [categories, setCategories] = useState(mockCategories);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
 
+    // Triggered when the player successfully finishes or completely loses the game
     const handleGameComplete = (stats) => {
+        // 'stats' object contains: { status: 'won' | 'lost', time: 123, attempts: 5 }
         console.log('Game completed! Ready to send stats to server:', stats);
+
+        // TODO: Future API Implementation
         // await fetch('/api/save-score', { method: 'POST', body: JSON.stringify(stats) });
     };
 
+    // Triggered when the 'NEXT PUZZLE' button is clicked on the results screen
     const handleNextPuzzle = async () => {
         console.log('Requesting new puzzle data from the backend...');
-        setIsLoading(true);
 
-        let newGameId;
+        // TODO: Future API Implementation
+        // 1. Set isLoading state to true
+        // 2. Fetch new words and categories from backend
+        // 3. Update the state with new data
+        // 4. Set isLoading state back to false
 
         try {
             const response = await fetch("http://localhost:3001/game/generate", {
@@ -54,56 +63,49 @@ export default function PlayPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    topic: 'General',
-                    difficulty: 'Hard',
+                    topic : 'General',
+                    difficulty : 'Hard',
                 }),
             });
 
             if (!response.ok) {
-                const errorDetails = await response.text();
-                throw new Error(`Failed to generate game! Status: ${response.status}. Details: ${errorDetails}`);
+                throw new Error("Failed to generate game");
             }
 
             const data = await response.json();
-            newGameId = data.gameId;
-            setGameId(newGameId);
+            setGameId(data.gameId);
         } catch (error) {
-            console.error("Error generating game:", error);
-            setIsLoading(false);
-            return;
+            console.error(error);
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/game/${newGameId}`, {
+            const response = await fetch(`http://localhost:3001/game/${gameID}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                }
+                },
+                body: JSON.stringify({
+                    topic : 'General',
+                    difficulty : 'Hard',
+                }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to fetch game data");
+                throw new Error("Failed to generate game");
             }
 
             const data = await response.json();
-
-            if (data.grid) {
-                const formattedWords = data.grid.map((wordString, index) => ({
-                    id: index,
-                    text: wordString,
-                    categoryId: null
-                }));
-                setWords(formattedWords);
-            }
+            setCategories(data.revealedCategories.categories);
+            setWords(data.revealedCategories.words);
         } catch (error) {
-            console.error("Error fetching game state:", error);
-        } finally {
-            setIsLoading(false);
+            console.error(error);
         }
     };
 
+    // Triggered when the user clicks the 'LOBBY' button (header or results screen)
     const handleLobbyClick = () => {
         console.log('Navigating back to the main lobby...');
+
         router.push('/');
     };
 
@@ -114,10 +116,9 @@ export default function PlayPage() {
     return (
         <main className="min-h-screen bg-slate-50">
             <GameGrid
-                gameId={gameId}
                 words={words}
                 categories={categories}
-                isLoading={isLoading}
+                isLoading={false} // Update this with actual loading state once API is connected
                 onGameComplete={handleGameComplete}
                 onNextPuzzle={handleNextPuzzle}
                 onLobbyClick={handleLobbyClick}

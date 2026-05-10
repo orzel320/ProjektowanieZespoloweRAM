@@ -1,7 +1,10 @@
+import 'dotenv/config';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { BattleRoyaleModule } from './battle-royale/battle-royale.module';
 import { GameModule } from './game/game.module';
+import { LobbyModule } from './lobby/lobby.module';
 
 @Module({
   imports: [
@@ -17,6 +20,8 @@ import { GameModule } from './game/game.module';
     }),
     AuthModule,
     GameModule,
+    LobbyModule,
+    BattleRoyaleModule,
   ],
 })
 export class AppModule {}

@@ -4,7 +4,6 @@ from src.embeddings.extractor import extract_and_embed
 
 logger = logging.getLogger(__name__)
 
-# Przykładowe progi wskaźnika trudności (difficulty_score)
 DIFFICULTY_THRESHOLDS = {
     "Easy": {"max": -0.15},
     "Medium": {"min": -0.15, "max": 0.1},

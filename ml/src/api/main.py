@@ -31,7 +31,6 @@ async def lifespan(app: FastAPI):
     print("Inicjalizacja modeli ML i wektorów...")
     store = JsonVectorStore(cache_file_path="data_files/processed/vector_cache.json")
     
-    # Inicjalizujemy orchestrator prawdziwą funkcją wywołującą Gemini
     generator = AdaptiveBoardGenerator(store, generate_board)
     
     ml_state["store"] = store
@@ -43,7 +42,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Connections++ AI Module", version="2026.1", lifespan=lifespan)
 
-# Modele dla zapytań API
 class GuessRequest(BaseModel):
     game_id: str
     words: List[str]
