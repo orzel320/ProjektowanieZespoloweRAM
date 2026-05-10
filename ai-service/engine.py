@@ -21,22 +21,23 @@ class ConnectionsBoard(BaseModel):
     difficulty: str
     categories: List[Category] = Field(min_length=4, max_length=4)
 
-def generate_board(topic="General", difficulty="Hard"):
+def generate_board(topic="General", difficulty="Hard", feedback: str = None):
     theme_instruction = f"All 4 categories must relate to {topic} but from different angles." if topic != "General" else "The 4 categories must be from completely UNRELATED domains (e.g., one about science, one about movies, one about grammar)."
     difficulty_rules = {
-    "Easy": "Use very common words and obvious direct categories(e.g., 'Colors', 'Fruit'). Max 1 subtle red herring.",
-    "Medium": "Standard NYT difficulty. 1-2 red herrings. Categories like 'Synonyms for Big' or 'Types of Pasta'.",
-    "Hard": "Abstract connections and tricky categories (e.g., 'Prefixes for -phone'). Use 3-4 red herrings to confuse the player.",
-    "Expert": "Cryptic and meta-categories. Example: 'Words that are also numbers in French' or 'Anagrams of internal organs'. At least 4-5 overlapping red herrings. Use obscure vocabulary."
+        "Easy": "Use very common words and obvious direct categories(e.g., 'Colors', 'Fruit'). Max 1 subtle red herring.",
+        "Medium": "Standard NYT difficulty. 1-2 red herrings. Categories like 'Synonyms for Big' or 'Types of Pasta'.",
+        "Hard": "Abstract connections and tricky categories (e.g., 'Prefixes for -phone'). Use 3-4 red herrings to confuse the player.",
+        "Expert": "Cryptic and meta-categories. Example: 'Words that are also numbers in French' or 'Anagrams of internal organs'. At least 4-5 overlapping red herrings. Use obscure vocabulary."
     }
     selected_rule = difficulty_rules.get(difficulty, difficulty_rules["Medium"])
+    
     prompt = f"""
         You are a master puzzle designer for NYT Connections. 
         Difficulty Level: {difficulty}
         Rule for this level: {selected_rule}
 
         TASK:
-        Generate 4 DISTINCT and INDEPENDENT categories for a $4\times4$ grid.
+        Generate 4 DISTINCT and INDEPENDENT categories for a 4x4 grid.
 
         CORE RULES:
         1. NO OVERLAP: The categories must NOT be sub-topics of a single theme. {theme_instruction}
@@ -44,12 +45,18 @@ def generate_board(topic="General", difficulty="Hard"):
         3. RED HERRINGS (Crucial): Include 3+ words with double meanings. Example: 'SQUASH' (could be a sport OR a vegetable).
         4. DIFFICULTY SCALING:
             - EASY: Direct associations, 1-2 red herrings.
-            - HARD: Abstract connections (e.g., 'Words that end with a color'), 4+ red herrings, obscure vocabulary.
+            - HARD: Abstract connections (e.g., 'Words that end with a coulour'), 4+ red herrings, obscure vocabulary.
         5. Words in each category cannot be repeated.
-
-        OUTPUT:
-        Return exactly 4 categories with 4 words each. All in English.
         """
+
+    if feedback:
+        prompt += f"""
+        CRITICAL INSTRUCTION FOR THIS RETRY:
+        {feedback}
+        You MUST adjust your generation based on this feedback to meet the mathematical difficulty requirements.
+        """
+
+    prompt += "\nOUTPUT:\nReturn exactly 4 categories with 4 words each. All in English."
 
     try:
         response = client.models.generate_content(
@@ -63,11 +70,8 @@ def generate_board(topic="General", difficulty="Hard"):
         
         board_data = ConnectionsBoard.model_validate_json(response.text)
         print(f"--- {ACTIVE_MODEL} GENERATED PUZZLE ---")
-        print(board_data.model_dump_json(indent=2))
         return board_data
 
     except Exception as e:
         print(f"FAILED: {e}")
-
-if __name__ == "__main__":
-    generate_board("Football", "Expert")
+        return None
