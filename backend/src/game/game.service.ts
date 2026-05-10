@@ -192,16 +192,18 @@ export class GameService {
   }
 
   private toPublicState(game: Game) {
-    const revealedCategories = [...game.solvedCategoryIndices]
-      .sort((a, b) => a - b)
-      .map((i) => {
-        const c = game.boardJson.categories[i];
-        return {
-          name: c.name,
-          words: c.words,
-          logic: c.logic,
-        };
-      });
+    const indicesToReveal = game.status === 'lost'
+        ? [0, 1, 2, 3]
+        : [...game.solvedCategoryIndices].sort((a, b) => a - b);
+
+    const revealedCategories = indicesToReveal.map((i) => {
+      const c = game.boardJson.categories[i];
+      return {
+        name: c.name,
+        words: c.words,
+        logic: c.logic,
+      };
+    });
 
     const out: Record<string, unknown> = {
       gameId: game.id,
@@ -215,7 +217,7 @@ export class GameService {
 
     if (game.status !== 'in_progress' && game.finishedAt) {
       out.durationMs =
-        game.finishedAt.getTime() - game.startedAt.getTime();
+          game.finishedAt.getTime() - game.startedAt.getTime();
     }
 
     return out;

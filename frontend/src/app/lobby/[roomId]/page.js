@@ -59,6 +59,10 @@ export default function LobbyPage() {
         setPlayers(players.filter(player => player.id !== id));
     };
 
+    const handleStartGame = () => {
+        router.push(`/play`);
+    };
+
     const handleLeave = () => {
         router.push('/');
     };
@@ -170,7 +174,8 @@ export default function LobbyPage() {
 
                     {/* Main Action Buttons */}
                     <div className="flex flex-col gap-4">
-                        <button className="w-full py-6 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-2xl uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0">
+                        <button onClick={handleStartGame}
+                            className="w-full py-6 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-2xl uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0">
                             Start Game
                         </button>
                         <button
