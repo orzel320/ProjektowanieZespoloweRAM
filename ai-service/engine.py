@@ -71,7 +71,7 @@ def get_ai_topic():
         backups = ["Sports", "Space Exploration", "80s Music", "Ancient Mythology", "Popculture"]
         return random.choice(backups)
 
-def generate_board(topic="General", difficulty="Hard"):
+def generate_board(topic="General", difficulty="Hard", feedback: str = None):
     actual_topic = topic
 
     temp_map = {"Easy": 0.3, "Medium": 0.7, "Hard": 0.9, "Expert": 1.1}
@@ -109,9 +109,15 @@ def generate_board(topic="General", difficulty="Hard"):
             - HARD: Abstract connections (e.g., 'Words that end with a color'), 4+ red herrings, obscure vocabulary.
         5. Words in each category cannot be repeated.
 
-        OUTPUT:
-        Return exactly 4 categories with 4 words each. All in English.
         """
+    if feedback:
+        prompt += f"""
+        CRITICAL INSTRUCTION FOR THIS RETRY:
+        {feedback}
+        You MUST adjust your generation based on this feedback to meet the mathematical difficulty requirements.
+        """
+
+    prompt += "\nOUTPUT:\nReturn exactly 4 categories with 4 words each. All in English."
 
     try:
         response = client.models.generate_content(
