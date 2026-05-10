@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react'
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import GameGrid from '../../components/Board';
 
@@ -28,10 +28,9 @@ export default function PlayPage() {
     const router = useRouter();
 
     const [gameId, setGameId] = useState('');
-
     const [words, setWords] = useState(mockWords);
     const [categories, setCategories] = useState(mockCategories);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     // ==========================================
     // EVENT HANDLERS
@@ -49,12 +48,9 @@ export default function PlayPage() {
     // Triggered when the 'NEXT PUZZLE' button is clicked on the results screen
     const handleNextPuzzle = async () => {
         console.log('Requesting new puzzle data from the backend...');
+        setIsLoading(true);
 
-        // TODO: Future API Implementation
-        // 1. Set isLoading state to true
-        // 2. Fetch new words and categories from backend
-        // 3. Update the state with new data
-        // 4. Set isLoading state back to false
+        let newGameId;
 
         try {
             const response = await fetch("http://localhost:3001/game/generate", {
@@ -63,49 +59,57 @@ export default function PlayPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    topic : 'General',
-                    difficulty : 'Hard',
+                    topic: 'General',
+                    difficulty: 'Hard',
                 }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to generate game");
+                const errorDetails = await response.text();
+                throw new Error(`Failed to generate game! Status: ${response.status}. Details: ${errorDetails}`);
             }
 
             const data = await response.json();
-            setGameId(data.gameId);
+            newGameId = data.gameId;
+            setGameId(newGameId);
         } catch (error) {
-            console.error(error);
+            console.error("Error generating game:", error);
+            setIsLoading(false);
+            return;
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/game/${gameID}`, {
+            const response = await fetch(`http://localhost:3001/game/${newGameId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    topic : 'General',
-                    difficulty : 'Hard',
-                }),
+                }
             });
 
             if (!response.ok) {
-                throw new Error("Failed to generate game");
+                throw new Error("Failed to fetch game data");
             }
 
             const data = await response.json();
-            setCategories(data.revealedCategories.categories);
-            setWords(data.revealedCategories.words);
+            if (data.grid) {
+                const formattedWords = data.grid.map((wordString, index) => ({
+                    id: index,
+                    text: wordString,
+                    categoryId: null
+                }));
+                setWords(formattedWords);
+            }
+
         } catch (error) {
-            console.error(error);
+            console.error("Error fetching game state:", error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     // Triggered when the user clicks the 'LOBBY' button (header or results screen)
     const handleLobbyClick = () => {
         console.log('Navigating back to the main lobby...');
-
         router.push('/');
     };
 
@@ -118,7 +122,7 @@ export default function PlayPage() {
             <GameGrid
                 words={words}
                 categories={categories}
-                isLoading={false} // Update this with actual loading state once API is connected
+                isLoading={isLoading}
                 onGameComplete={handleGameComplete}
                 onNextPuzzle={handleNextPuzzle}
                 onLobbyClick={handleLobbyClick}

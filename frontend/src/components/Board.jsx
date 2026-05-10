@@ -37,16 +37,22 @@ export default function GameGrid({
     // EFFECTS
     // ==========================================
 
-    // 1. Initialize words
-    // Shuffles the words array whenever new words are passed via props
+    // 1. Initialize Game
     useEffect(() => {
-        onInitGame();
-        if (words.length > 0) {
+        if (typeof onInitGame === 'function') {
+            onInitGame();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // 2. Initialize words
+    useEffect(() => {
+        if (words && words.length > 0) {
             setDisplayWords([...words].sort(() => Math.random() - 0.5));
         }
     }, [words]);
 
-    // 2. Game Timer
+    // 3. Game Timer
     // Runs only when the game is active (not over, won, or revealing answers)
     useEffect(() => {
         let interval = null;
@@ -67,7 +73,7 @@ export default function GameGrid({
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // 3. Auto-reveal logic on game loss
+    // 4. Auto-reveal logic on game loss
     // Triggers when mistakes run out. Sequentially reveals remaining groups with a delay.
     useEffect(() => {
         if (mistakesRemaining === 0 && status === 'idle') {
@@ -132,7 +138,7 @@ export default function GameGrid({
         const isCorrect = selectedWords.every(w => w.categoryId === catId);
 
         // Record the attempt colors for the history grid on the results screen
-        const attemptColors = selectedWords.map(w => categories[w.categoryId].color);
+        const attemptColors = selectedWords.map(w => categories[w.categoryId]?.color || 'bg-slate-300');
         setGuessHistory(prev => [...prev, attemptColors]);
 
         if (isCorrect) {
@@ -141,7 +147,7 @@ export default function GameGrid({
             setTimeout(() => setStatus('merging'), 800);
 
             setTimeout(() => {
-                const group = categories[catId];
+                const group = categories[catId] || { name: 'SOLVED', color: 'bg-slate-300' };
                 setSolvedGroups(prev => [...prev, {
                     ...group,
                     id: catId,
@@ -174,9 +180,6 @@ export default function GameGrid({
     const handleNextPuzzle = () => {
         // Trigger parent callback to fetch new data from the backend
         if (onNextPuzzle) onNextPuzzle();
-
-        // Fallback: Shuffle current words in case the backend hasn't provided new ones yet
-        setDisplayWords([...words].sort(() => Math.random() - 0.5));
 
         // Reset all states
         setSolvedGroups([]);
