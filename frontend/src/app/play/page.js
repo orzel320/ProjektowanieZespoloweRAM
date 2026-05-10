@@ -79,7 +79,7 @@ export default function PlayPage() {
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/game/${gameID}`, {
+            const response = fetch(`http://localhost:3001/game/${gameID}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -95,8 +95,8 @@ export default function PlayPage() {
             }
 
             const data = await response.json();
-            setCategories(data.revealedCategories.categories);
-            setWords(data.revealedCategories.words);
+            //setCategories(data.revealedCategories.categories);
+            setWords(data.grid);
         } catch (error) {
             console.error(error);
         }
