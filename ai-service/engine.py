@@ -71,7 +71,7 @@ def get_ai_topic():
         backups = ["Sports", "Space Exploration", "80s Music", "Ancient Mythology", "Popculture"]
         return random.choice(backups)
 
-def generate_board(topic="General", difficulty="Hard"):
+def generate_board(topic="General", difficulty="Hard", feedback: str = None):
     actual_topic = topic
 
     temp_map = {"Easy": 0.3, "Medium": 0.7, "Hard": 0.9, "Expert": 1.1}
