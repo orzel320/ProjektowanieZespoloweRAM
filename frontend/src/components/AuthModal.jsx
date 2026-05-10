@@ -26,6 +26,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username, password }),
+                credentials: 'include',
             });
 
             const data = await response.json();

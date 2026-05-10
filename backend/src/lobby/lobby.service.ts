@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
 import type {
   LobbyPlayer,
   LobbyPublicRoom,
@@ -8,6 +7,8 @@ import type {
 } from './lobby.types';
 
 const DEFAULT_MAX_PLAYERS = 8;
+const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const ROOM_CODE_LENGTH = 6;
 
 const DEFAULT_CONFIG: LobbyRoomConfig = {
   mode: 'BR',
@@ -30,7 +31,7 @@ export class LobbyService {
     maxPlayers = DEFAULT_MAX_PLAYERS,
     config: Partial<LobbyRoomConfig> = {},
   ): LobbyRoom {
-    const roomId = uuidv4();
+    const roomId = this.generateRoomCode();
     const room: LobbyRoom = {
       roomId,
       status: 'waiting',
@@ -122,6 +123,19 @@ export class LobbyService {
     return [...this.rooms.values()]
       .filter((r) => r.status === 'waiting')
       .map((r) => this.toPublic(r));
+  }
+
+  private generateRoomCode(): string {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      let code = '';
+      for (let i = 0; i < ROOM_CODE_LENGTH; i++) {
+        code += ROOM_CODE_ALPHABET.charAt(
+          Math.floor(Math.random() * ROOM_CODE_ALPHABET.length),
+        );
+      }
+      if (!this.rooms.has(code)) return code;
+    }
+    throw new Error('Could not generate a unique room code');
   }
 
   toPublic(room: LobbyRoom): LobbyPublicRoom {
