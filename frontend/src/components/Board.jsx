@@ -11,6 +11,7 @@ export default function GameGrid({
                                      onNextPuzzle,
                                      onLobbyClick,
                                      onInitGame,
+                                     oneAway
                                  }) {
     const [displayWords, setDisplayWords] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
@@ -235,6 +236,20 @@ export default function GameGrid({
                         </div>
                     </div>
                 )}
+
+                {oneAway && (
+                    <div className="flex flex-col items-center bg-white rounded-3xl p-8 shadow-sm border border-slate-200 animate-pop-in mt-8 text-center">
+                        <h2
+                            className={`text-3xl font-black uppercase mb-2 ${
+                                status === 'won' ? 'text-emerald-500' : 'text-slate-600'
+                            }`}
+                        >
+                            One Away!
+                        </h2>
+                    </div>
+                )}
+
+
 
                 <div className="space-y-3 mb-4">
                     {solvedGroups.map(group => (

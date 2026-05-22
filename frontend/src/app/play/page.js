@@ -31,6 +31,7 @@ export default function PlayPage() {
     const [words, setWords] = useState(mockWords);
     const [categories, setCategories] = useState(mockCategories);
     const [isLoading, setIsLoading] = useState(false);
+    const [oneAway, setOneAway] = useState(true); //(initial state = true) only for test purposes
 
     // ==========================================
     // EVENT HANDLERS
@@ -122,6 +123,7 @@ export default function PlayPage() {
                 onNextPuzzle={handleNextPuzzle}
                 onLobbyClick={handleLobbyClick}
                 onInitGame={handleNextPuzzle}
+                oneAway={oneAway}
             />
         </main>
     );
