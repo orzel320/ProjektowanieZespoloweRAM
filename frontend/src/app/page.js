@@ -145,6 +145,12 @@ export default function MainMenu() {
                 <div className="flex items-center gap-4">
                     {user ? (
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {}}
+                                className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-gray-900/10 active:scale-95"
+                            >
+                                Stats
+                            </button>
                             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-emerald-100 shadow-sm">
                                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                                 <span className="text-xs font-black text-gray-600 uppercase tracking-widest">@{user.name}</span>
