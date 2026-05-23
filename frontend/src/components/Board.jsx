@@ -11,7 +11,6 @@ export default function GameGrid({
                                      onNextPuzzle,
                                      onLobbyClick,
                                      onInitGame,
-                                     oneAway
                                  }) {
     const [displayWords, setDisplayWords] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
@@ -24,6 +23,8 @@ export default function GameGrid({
     const [attempts, setAttempts] = useState(0);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [status, setStatus] = useState('idle');
+
+    const [oneAway, setOneAway] = useState(false);
 
     useEffect(() => {
         if (typeof onInitGame === 'function') {
@@ -161,6 +162,10 @@ export default function GameGrid({
                 setStatus('error');
                 setMistakesRemaining(data.maxMistakes - data.mistakes);
                 setGuessHistory(prev => [...prev, Array(4).fill('bg-slate-300')]);
+
+                setOneAway(data.isOneAway);
+                //setOneAway(true); //only for test purposes
+                setTimeout(() => {setOneAway(false);}, 3000);
 
                 setTimeout(() => {
                     setSelectedIds([]);
