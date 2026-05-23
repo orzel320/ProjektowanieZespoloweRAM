@@ -68,6 +68,7 @@ export default function MainMenu() {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [showAuthError, setShowAuthError] = useState(false);
+    const [showStats, setShowStats] = useState(false);
     const [selectedMode, setSelectedMode] = useState('BR');
 
     const handleLoginSuccess = (username) => {
@@ -146,7 +147,7 @@ export default function MainMenu() {
                     {user ? (
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => {}}
+                                onClick={() => {setShowStats(true)}}
                                 className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-gray-900/10 active:scale-95"
                             >
                                 Stats
@@ -161,6 +162,13 @@ export default function MainMenu() {
                             >
                                 Logout
                             </button>
+                            <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 transform ${showStats ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0 pointer-events-none'}`}>
+                                <div className="bg-white border-2 border-emerald-400 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
+                                    <p className="font-black text-gray-800 uppercase tracking-widest text-xs">
+                                        Here are your stats!
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <button
