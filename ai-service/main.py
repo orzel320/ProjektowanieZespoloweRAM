@@ -7,7 +7,7 @@ from engine import generate_board, ConnectionsBoard
 app = FastAPI(
     title="Connections++ AI Module",
     description="Microservice for generating dynamic word association puzzles using Gemini AI.",
-    version="2026.3.0"
+    version="2026.4.0"
 )
 
 app.add_middleware(
@@ -23,6 +23,10 @@ class DifficultyLevel(str, Enum):
     HARD = "Hard"
     EXPERT = "Expert"
 
+class LanguageOption(str, Enum):
+    PL = "pl"
+    EN = "en"
+
 class PuzzleRequest(BaseModel):
     topic: str = Field(
         default="General", 
@@ -32,18 +36,22 @@ class PuzzleRequest(BaseModel):
         default=DifficultyLevel.MEDIUM, 
         description="Determines how tricky the connections and red herrings will be."
     )
+    language: LanguageOption = Field(
+        default=LanguageOption.EN,
+        description="The language of the generated board (pl or en)."
+    )
 
 @app.get("/", tags=["Health"])
 async def root():
     return {
         "status": "AI Service is online",
         "engine": "Gemini 2.5 Flash",
-        "features": ["Dynamic Topics", "Adaptive Difficulty", "Fallback Protection"]
+        "features": ["Dynamic Topics", "Adaptive Difficulty", "Fallback Protection", "Multi-language Support"]
     }
 
 @app.post("/generate", response_model=ConnectionsBoard, tags=["Generator"])
 async def generate_endpoint(request: PuzzleRequest):
     try:
-        return generate_board(request.topic, request.difficulty.value)
+        return generate_board(request.topic, request.difficulty.value, language=request.language.value)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
