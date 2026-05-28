@@ -13,6 +13,7 @@ function CreateRoomContent() {
     const initialMode = searchParams.get('mode') === '1v1' ? '1v1' : 'Battle Royale';
 
     const [mode, setMode] = useState(initialMode);
+    const [topic, setTopic] = useState('General');
     const [playerLimit, setPlayerLimit] = useState(initialMode === '1v1' ? 2 : 20);
     const [roundTime, setRoundTime] = useState(60);
     const [difficulty, setDifficulty] = useState('Medium');
@@ -47,6 +48,7 @@ function CreateRoomContent() {
             maxPlayers: String(playerLimit),
             roundDurationMs: String(roundTime * 1000),
             difficulty,
+            topic: topic.trim() || 'General',
         });
         router.push(`/lobby/new?${params.toString()}`);
     };
@@ -95,6 +97,17 @@ function CreateRoomContent() {
                     </div>
 
                     <div className="flex flex-col gap-3">
+                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Category (Topic)</label>
+                        <input
+                            type="text"
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            placeholder="e.g. Movies, Space, General"
+                            className="h-14 w-full bg-white border border-gray-100 rounded-xl px-5 text-lg font-bold text-gray-800 focus:outline-none focus:border-emerald-400 shadow-sm"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-3">
                         <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Player Limit</label>
                         <input
                             type="number"
@@ -118,9 +131,9 @@ function CreateRoomContent() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 md:col-span-2">
                         <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Difficulty</label>
-                        <div className="flex gap-2 h-14">
+                        <div className="flex gap-2 h-14 max-w-md">
                             {['Easy', 'Medium', 'Hard'].map((diff) => (
                                 <button
                                     key={diff}

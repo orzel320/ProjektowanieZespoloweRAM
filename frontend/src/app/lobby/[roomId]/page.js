@@ -66,6 +66,7 @@ export default function LobbyPage() {
                         mode: searchParams.get('mode') === '1v1' ? '1v1' : 'BR',
                         roundDurationMs: Number(searchParams.get('roundDurationMs')) || 60000,
                         difficulty: searchParams.get('difficulty') || 'Medium',
+                        topic: searchParams.get('topic') || 'General',
                     });
                 } else {
                     socket.emit('lobby:join_room', {
@@ -203,7 +204,7 @@ export default function LobbyPage() {
                         })}
                     </div>
 
-                    <div className="mt-16 flex gap-12 border-t border-emerald-50 pt-8">
+                    <div className="mt-16 flex flex-wrap gap-8 md:gap-12 border-t border-emerald-50 pt-8">
                         <div>
                             <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Game Mode</p>
                             <p className="text-base font-black text-gray-700">{mode === 'BR' ? 'Battle Royale' : '1 vs 1 Duel'}</p>
@@ -214,6 +215,14 @@ export default function LobbyPage() {
                                 <p className="text-base font-black text-gray-700">{roundTimeSec} seconds</p>
                             </div>
                         )}
+                        <div>
+                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Category</p>
+                            <p className="text-base font-black text-gray-700">{room?.config?.topic || searchParams.get('topic') || 'General'}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Difficulty</p>
+                            <p className="text-base font-black text-gray-700">{room?.config?.difficulty || searchParams.get('difficulty') || 'Medium'}</p>
+                        </div>
                     </div>
                 </div>
 
