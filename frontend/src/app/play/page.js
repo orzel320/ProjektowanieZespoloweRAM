@@ -9,7 +9,6 @@ import GameGrid from '../../components/Board';
 // MOCK DATA (To be replaced with API calls)
 // ==========================================
 
-// Mock categories dictionary
 const mockCategories = {
     1: { name: 'TROPICAL FRUITS', color: 'bg-yellow-400' },
     2: { name: 'LIVING ROOM FURNITURE', color: 'bg-blue-400' },
@@ -17,7 +16,6 @@ const mockCategories = {
     4: { name: 'PRIMARY COLORS', color: 'bg-purple-400' }
 };
 
-// Mock puzzle words
 const mockWords = [
     { id: 1, text: 'APPLE', categoryId: 1 }, { id: 2, text: 'PINE', categoryId: 1 }, { id: 3, text: 'BANANA', categoryId: 1 }, { id: 4, text: 'KIWI', categoryId: 1 },
     { id: 5, text: 'TABLE', categoryId: 2 }, { id: 6, text: 'CHAIR', categoryId: 2 }, { id: 7, text: 'SOFA', categoryId: 2 }, { id: 8, text: 'ARM-CHAIR', categoryId: 2 },
@@ -33,17 +31,13 @@ export default function PlayPage() {
     const [categories, setCategories] = useState(mockCategories);
     const [isLoading, setIsLoading] = useState(false);
 
+    // States from previous feature (Topic & Difficulty in solo)
     const [hasStarted, setHasStarted] = useState(false);
     const [topic, setTopic] = useState('General');
     const [difficulty, setDifficulty] = useState('Medium');
 
-    // ==========================================
-    // EVENT HANDLERS
-    // ==========================================
-
     const handleGameComplete = (stats) => {
         console.log('Game completed! Ready to send stats to server:', stats);
-        // await fetch('/api/save-score', { method: 'POST', body: JSON.stringify(stats) });
     };
 
     const handleNextPuzzle = async () => {
@@ -112,10 +106,7 @@ export default function PlayPage() {
         router.push('/');
     };
 
-    // ==========================================
-    // RENDER
-    // ==========================================
-
+    // If game has not started, show the beautiful settings screen
     if (!hasStarted) {
         return (
             <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
