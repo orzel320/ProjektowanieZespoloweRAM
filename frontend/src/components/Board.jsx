@@ -24,6 +24,8 @@ export default function GameGrid({
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [status, setStatus] = useState('idle');
 
+    const [oneAway, setOneAway] = useState(false);
+
     useEffect(() => {
         if (typeof onInitGame === 'function') {
             onInitGame();
@@ -161,6 +163,10 @@ export default function GameGrid({
                 setMistakesRemaining(data.maxMistakes - data.mistakes);
                 setGuessHistory(prev => [...prev, Array(4).fill('bg-slate-300')]);
 
+                setOneAway(data.isOneAway);
+                //setOneAway(true); //only for test purposes
+                setTimeout(() => {setOneAway(false);}, 3000);
+
                 setTimeout(() => {
                     setSelectedIds([]);
                     if (data.status === 'lost') {
@@ -235,6 +241,20 @@ export default function GameGrid({
                         </div>
                     </div>
                 )}
+
+                {oneAway && (
+                    <div className="flex flex-col items-center bg-white rounded-3xl p-8 shadow-sm border border-slate-200 animate-pop-in mt-8 text-center">
+                        <h2
+                            className={`text-3xl font-black uppercase mb-2 ${
+                                status === 'won' ? 'text-emerald-500' : 'text-slate-600'
+                            }`}
+                        >
+                            One Away!
+                        </h2>
+                    </div>
+                )}
+
+
 
                 <div className="space-y-3 mb-4">
                     {solvedGroups.map(group => (

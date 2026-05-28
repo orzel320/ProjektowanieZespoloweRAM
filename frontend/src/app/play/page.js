@@ -31,7 +31,6 @@ export default function PlayPage() {
     const [words, setWords] = useState(mockWords);
     const [categories, setCategories] = useState(mockCategories);
     const [isLoading, setIsLoading] = useState(false);
-
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
