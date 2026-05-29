@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import GameGrid from '../../components/Board';
 
 // ==========================================
@@ -31,6 +32,11 @@ export default function PlayPage() {
     const [words, setWords] = useState(mockWords);
     const [categories, setCategories] = useState(mockCategories);
     const [isLoading, setIsLoading] = useState(false);
+
+    const [hasStarted, setHasStarted] = useState(false);
+    const [topic, setTopic] = useState('General');
+    const [difficulty, setDifficulty] = useState('Medium');
+
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
@@ -53,8 +59,8 @@ export default function PlayPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    topic: 'General',
-                    difficulty: 'Hard',
+                    topic: topic.trim() || 'General',
+                    difficulty: difficulty,
                 }),
             });
 
@@ -109,6 +115,69 @@ export default function PlayPage() {
     // ==========================================
     // RENDER
     // ==========================================
+
+    if (!hasStarted) {
+        return (
+            <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
+                <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-emerald-200/30 rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[40%] bg-green-200/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+                <header className="w-full flex items-center justify-between px-8 py-5 bg-white/60 backdrop-blur-md border-b border-green-100/50 sticky top-0 z-10">
+                    <div className="flex items-center gap-6">
+                        <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                            <span>← Menu</span>
+                        </Link>
+                        <div className="text-xl font-bold tracking-tight flex items-center gap-2">
+                            <span className="text-gray-700 font-black">connections<span className="text-emerald-500">++</span></span>
+                        </div>
+                    </div>
+                </header>
+
+                <div className="flex-1 w-full max-w-2xl mx-auto px-6 py-12 md:py-16 relative z-0 flex flex-col justify-center">
+                    <h2 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-12 tracking-tight text-center">Solo Mode Settings</h2>
+
+                    <div className="flex flex-col gap-8 mb-12">
+                        <div className="flex flex-col gap-3">
+                            <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Category (Topic)</label>
+                            <input
+                                type="text"
+                                value={topic}
+                                onChange={(e) => setTopic(e.target.value)}
+                                placeholder="e.g. Movies, History, General"
+                                className="h-14 w-full bg-white border border-gray-100 rounded-xl px-5 text-lg font-bold text-gray-800 focus:outline-none focus:border-emerald-400 shadow-sm"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Difficulty</label>
+                            <div className="flex gap-2 h-14">
+                                {['Easy', 'Medium', 'Hard'].map((diff) => (
+                                    <button
+                                        key={diff}
+                                        onClick={() => setDifficulty(diff)}
+                                        className={`flex-1 rounded-xl font-bold text-md transition-all duration-200 border outline-none ${
+                                            difficulty === diff
+                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-lg shadow-emerald-500/25 scale-[1.02]'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
+                                        }`}
+                                    >
+                                        {diff}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setHasStarted(true)}
+                        className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white text-center font-black text-lg uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/20 transform hover:-translate-y-1 active:scale-95 transition-all duration-300"
+                    >
+                        Start Solo Game
+                    </button>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-slate-50">
