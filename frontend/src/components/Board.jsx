@@ -23,6 +23,13 @@ export default function GameGrid({
     const [attempts, setAttempts] = useState(0);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [status, setStatus] = useState('idle');
+    const [oneAway, setOneAway] = useState(false);
+
+    // === HINT SYSTEM (SOLO) ===
+    const [hintUsed, setHintUsed] = useState(false);
+    const [isHintModalOpen, setIsHintModalOpen] = useState(false);
+    const [hintWords, setHintWords] = useState([]);
+    const [hintCategory, setHintCategory] = useState(null);
 
     useEffect(() => {
         if (typeof onInitGame === 'function') {
@@ -55,10 +62,26 @@ export default function GameGrid({
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Animation to reveal correct answers upon losing
+    const handleHintRequest = async (type) => {
+        setIsHintModalOpen(false);
+        setHintUsed(true);
+
+        // MOCK: Symulacja zapytania POST /game/:gameId/hint
+        if (type === 'words') {
+            // Wybieramy 2 pierwsze słowa z dostępnych (Mock)
+            if (displayWords.length >= 2) {
+                setHintWords([displayWords[0].id, displayWords[1].id]);
+                setTimeout(() => setHintWords([]), 6000); // Czyści podświetlenie po 6s
+            }
+        } else if (type === 'category') {
+            // Mockujemy nazwę kategorii
+            setHintCategory("MYSTERY CATEGORY (MOCK)");
+            setTimeout(() => setHintCategory(null), 6000);
+        }
+    };
+
     useEffect(() => {
         if (status === 'revealing' && lostGameRevealedCategories.length > 0) {
-            // Keep only categories that are not yet in solvedGroups
             const unsolved = lostGameRevealedCategories.filter(
                 rcat => !solvedGroups.some(sg => sg.name === rcat.name)
             );
@@ -73,7 +96,7 @@ export default function GameGrid({
                     setSolvedGroups(prev => [...prev, {
                         id: Date.now() + index,
                         name: cat.name,
-                        color: "bg-slate-300", // Gray color for unsolved
+                        color: "bg-slate-300",
                         wordsText: cat.words.join(', ')
                     }]);
 
@@ -117,7 +140,6 @@ export default function GameGrid({
             if (!response.ok) throw new Error("Failed to verify words");
 
             const data = await response.json();
-            console.log("Server response:", data);
 
             if (data.correct) {
                 const guessedCategory = data.revealedCategories.find(cat => {
@@ -127,7 +149,6 @@ export default function GameGrid({
                 });
 
                 const categoryName = guessedCategory ? guessedCategory.name : "FOUND CATEGORY";
-
                 const colorMap = ["bg-yellow-400", "bg-emerald-400", "bg-blue-400", "bg-purple-400"];
                 const groupColor = colorMap[solvedGroups.length] || "bg-emerald-400";
 
@@ -147,6 +168,7 @@ export default function GameGrid({
                     setSolvedGroups(prev => [...prev, newGroup]);
                     setDisplayWords(prev => prev.filter(w => !guessWordsText.includes(w.text)));
                     setSelectedIds([]);
+                    setHintWords([]); // Reset podpowiedzi, jeśli była aktywna
 
                     if (data.status === 'won') {
                         setStatus('won');
@@ -160,6 +182,9 @@ export default function GameGrid({
                 setStatus('error');
                 setMistakesRemaining(data.maxMistakes - data.mistakes);
                 setGuessHistory(prev => [...prev, Array(4).fill('bg-slate-300')]);
+
+                setOneAway(data.isOneAway);
+                setTimeout(() => {setOneAway(false);}, 3000);
 
                 setTimeout(() => {
                     setSelectedIds([]);
@@ -187,6 +212,9 @@ export default function GameGrid({
         setSeconds(0);
         setAttempts(0);
         setStatus('idle');
+        setHintUsed(false);
+        setHintWords([]);
+        setHintCategory(null);
     };
 
     const handleLogout = async () => {
@@ -224,7 +252,16 @@ export default function GameGrid({
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto px-4">
+            <main className="max-w-3xl mx-auto px-4 relative">
+                {/* Wyświetlanie wylosowanej kategorii jako podpowiedzi */}
+                {hintCategory && (
+                    <div className="absolute top-[-20px] left-0 w-full flex justify-center z-10 animate-pop-in">
+                        <div className="bg-blue-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-500/30">
+                            Hint: {hintCategory}
+                        </div>
+                    </div>
+                )}
+
                 {status !== 'game_over' && status !== 'won' && status !== 'revealing' && (
                     <div className="flex flex-col items-center mb-6 h-16">
                         <h2 className="text-xl font-extrabold uppercase mb-4 text-slate-700">Create groups of four!</h2>
@@ -233,6 +270,14 @@ export default function GameGrid({
                                 <div key={i} className={`w-4 h-4 rounded-full transition-colors ${i < mistakesRemaining ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-slate-200'}`} />
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {oneAway && (
+                    <div className="flex flex-col items-center bg-white rounded-3xl p-8 shadow-sm border border-slate-200 animate-pop-in mt-8 text-center">
+                        <h2 className={`text-3xl font-black uppercase mb-2 ${status === 'won' ? 'text-emerald-500' : 'text-slate-600'}`}>
+                            One Away!
+                        </h2>
                     </div>
                 )}
 
@@ -287,6 +332,7 @@ export default function GameGrid({
                         <div className="grid grid-cols-4 gap-3 sm:gap-4 mb-10">
                             {displayWords.map((word) => {
                                 const isSelected = selectedIds.includes(word.id);
+                                const isHinted = hintWords.includes(word.id);
                                 const selectIdx = selectedIds.indexOf(word.id);
 
                                 let animClass = '';
@@ -294,6 +340,9 @@ export default function GameGrid({
                                 if (isSelected && status === 'merging') animClass = 'animate-merge';
                                 if (isSelected && status === 'error') animClass = 'animate-shake';
                                 if (status === 'revealing') animClass = 'opacity-50 transition-opacity duration-500';
+
+                                // Dodatkowy styl dla podpowiedzi
+                                const hintStyle = isHinted ? 'ring-4 ring-purple-400 shadow-[0_0_20px_rgba(167,139,250,0.6)] animate-pulse' : '';
 
                                 return (
                                     <button
@@ -308,6 +357,7 @@ export default function GameGrid({
                                             : 'bg-slate-200 text-slate-800 hover:bg-slate-300 shadow-sm'
                                         }
                                             ${animClass}
+                                            ${hintStyle}
                                         `}
                                     >
                                         {word.text}
@@ -319,13 +369,22 @@ export default function GameGrid({
                 )}
 
                 {status !== 'game_over' && status !== 'won' && status !== 'revealing' && (
-                    <div className="flex justify-center gap-4 mt-8 h-12">
-                        <button onClick={() => setDisplayWords([...displayWords].sort(() => Math.random() - 0.5))} className="px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all">SHUFFLE</button>
-                        <button onClick={() => setSelectedIds([])} className="px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all">CLEAR</button>
+                    <div className="flex justify-center gap-3 mt-8 h-12 flex-wrap">
+                        <button onClick={() => setDisplayWords([...displayWords].sort(() => Math.random() - 0.5))} className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base">SHUFFLE</button>
+                        <button onClick={() => setSelectedIds([])} className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base">CLEAR</button>
+                        <button
+                            onClick={() => setIsHintModalOpen(true)}
+                            disabled={hintUsed || status !== 'idle'}
+                            className={`px-5 sm:px-6 py-3 border-2 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base ${
+                                hintUsed ? 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed' : 'border-purple-200 text-purple-600 hover:bg-purple-50'
+                            }`}
+                        >
+                            {hintUsed ? 'HINT USED' : 'HINT'}
+                        </button>
                         <button
                             onClick={handleSubmit}
                             disabled={selectedIds.length !== 4 || status !== 'idle'}
-                            className={`px-10 py-3 rounded-2xl font-black shadow-lg transition-all ${selectedIds.length === 4 ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-slate-200 text-slate-400 shadow-none'}`}
+                            className={`px-8 sm:px-10 py-3 rounded-2xl font-black shadow-lg transition-all text-sm sm:text-base ${selectedIds.length === 4 ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-slate-200 text-slate-400 shadow-none'}`}
                         >
                             SUBMIT
                         </button>
@@ -333,6 +392,7 @@ export default function GameGrid({
                 )}
             </main>
 
+            {/* MODAL INFORMACYJNY */}
             {isInfoModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-pop-in">
@@ -343,6 +403,26 @@ export default function GameGrid({
                             <li>Select four items and tap <span className="font-bold text-slate-800">SUBMIT</span> to check if your guess is correct.</li>
                             <li>Find all groups without making 4 mistakes!</li>
                         </ul>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL SYSTEMU PODPOWIEDZI */}
+            {isHintModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-pop-in">
+                        <button onClick={() => setIsHintModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 font-bold transition-colors">✕</button>
+                        <h2 className="text-2xl font-black mb-2 text-slate-800">Choose Hint</h2>
+                        <p className="text-xs font-bold text-emerald-500 mb-6 uppercase tracking-widest">1 Hint allowed per game</p>
+
+                        <div className="flex flex-col gap-4">
+                            <button onClick={() => handleHintRequest('words')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
+                                Show 2 Matching Words
+                            </button>
+                            <button onClick={() => handleHintRequest('category')} className="w-full py-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200 shadow-sm active:scale-95">
+                                Show Category Name
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
