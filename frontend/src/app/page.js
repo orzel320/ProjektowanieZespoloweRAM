@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 
@@ -68,7 +68,32 @@ export default function MainMenu() {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [showAuthError, setShowAuthError] = useState(false);
+    const [showStats, setShowStats] = useState(false);
     const [selectedMode, setSelectedMode] = useState('BR');
+
+    const popupRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (
+                popupRef.current &&
+                !popupRef.current.contains(event.target)
+            ) {
+                setShowStats(false);
+            }
+        }
+
+        if (showStats) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+        };
+    }, [showStats]);
 
     const handleLoginSuccess = (username) => {
         if (!username) return;
@@ -145,6 +170,12 @@ export default function MainMenu() {
                 <div className="flex items-center gap-4">
                     {user ? (
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {setShowStats(true)}}
+                                className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-gray-900/10 active:scale-95"
+                            >
+                                Stats
+                            </button>
                             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-emerald-100 shadow-sm">
                                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                                 <span className="text-xs font-black text-gray-600 uppercase tracking-widest">@{user.name}</span>
@@ -155,6 +186,20 @@ export default function MainMenu() {
                             >
                                 Logout
                             </button>
+                            <div
+                                ref={popupRef}
+                                className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 transform ${
+                                    showStats
+                                        ? "translate-y-0 opacity-100"
+                                        : "-translate-y-12 opacity-0 pointer-events-none"
+                                }`}
+                            >
+                                <div className="bg-white border-2 border-emerald-400 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
+                                    <p className="font-black text-gray-800 uppercase tracking-widest text-xs">
+                                        Here are your stats!
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <button
