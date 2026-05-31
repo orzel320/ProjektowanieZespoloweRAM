@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
+export default function AuthModal({ isOpen, onClose, onLoginSuccess, dict }) {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -37,7 +37,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
             if (!isLogin && data.success) {
                 setIsLogin(true);
-                setError('Registration successful! Please log in with your new account.');
+                setError(dict.regSuccess);
                 setIsLoading(false);
                 return;
             }
@@ -52,7 +52,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         } catch (err) {
             console.error('Auth Error:', err);
             setError(err.message === 'Failed to fetch'
-                ? 'Server is offline. Check if backend is running on port 3001'
+                ? dict.serverOffline
                 : err.message
             );
         } finally {
@@ -70,7 +70,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             <div className="relative w-full max-w-md bg-white rounded-[2.5rem] p-8 md:p-12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transform transition-all border border-emerald-50">
 
                 <h2 className="text-4xl font-black text-gray-800 mb-8 tracking-tight text-center leading-none">
-                    {isLogin ? 'Log In' : 'Sign Up'}
+                    {isLogin ? dict.loginTitle : dict.signupTitle}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -86,26 +86,26 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                     )}
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] pl-2">Username</label>
+                        <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] pl-2">{dict.usernameLabel}</label>
                         <input
                             type="text"
                             required
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="h-15 w-full bg-[#FAFCF8] border-2 border-gray-100 rounded-2xl px-6 text-lg font-bold text-gray-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/5 transition-all"
-                            placeholder="Your nickname"
+                            placeholder={dict.usernameLabel}
                         />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] pl-2">Password</label>
+                        <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] pl-2">{dict.passwordLabel}</label>
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="h-15 w-full bg-[#FAFCF8] border-2 border-gray-100 rounded-2xl px-6 text-lg font-bold text-gray-800 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/5 transition-all"
-                            placeholder="••••••••"
+                            placeholder={dict.passwordPlaceholder}
                         />
                     </div>
 
@@ -117,7 +117,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                         {isLoading ? (
                             <div className="w-7 h-7 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : (
-                            isLogin ? 'Enter Game' : 'Join Now'
+                            isLogin ? dict.enterGame : dict.joinNow
                         )}
                     </button>
                 </form>
@@ -127,7 +127,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                         onClick={() => { setIsLogin(!isLogin); setError(''); }}
                         className="text-[11px] font-black text-gray-400 hover:text-emerald-600 transition-colors uppercase tracking-widest underline decoration-gray-200 underline-offset-8 decoration-2"
                     >
-                        {isLogin ? "Need an account? Sign up" : "Have an account? Log in"}
+                        {isLogin ? dict.needAccount : dict.haveAccount}
                     </button>
                 </div>
             </div>
