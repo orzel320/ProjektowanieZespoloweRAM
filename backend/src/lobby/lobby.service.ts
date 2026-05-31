@@ -142,10 +142,9 @@ export class LobbyService {
     return {
       roomId: room.roomId,
       status: room.status,
-      playerCount: room.players.length,
       maxPlayers: room.maxPlayers,
-      players: room.players.map(({ userId, username, isHost }) => ({ userId, username, isHost })),
-      config: room.config,
+      players: room.players.map(({ userId, username, isHost, joinedAt }) => ({ userId, username, isHost, joinedAt })),        config: room.config,
+      createdAt: room.createdAt,
       gameId: room.gameId,
     };
   }

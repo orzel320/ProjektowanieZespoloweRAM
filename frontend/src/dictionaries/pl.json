@@ -16,9 +16,9 @@
     "logout": "Wyloguj",
     "offlineLabel": "OFFLINE",
     "onlineLabel": "ONLINE",
-    "authErrorStart": "A-a-a! You need to ",
-    "authErrorLink": "log in",
-    "authErrorEnd": " first!"
+    "authErrorStart": "A-a-a! Musisz się najpierw ",
+    "authErrorLink": "zalogować",
+    "authErrorEnd": "!"
   },
   "auth": {
     "loginTitle": "Logowanie",
@@ -81,9 +81,9 @@
   "joinRoom": {
     "backMenu": "Menu",
     "guest": "gość",
-    "connectionError": "Błąd połączenia \ud83d\udd0c",
-    "timeoutError": "Przekroczono czas oczekiwania \u23f1\ufe0f",
-    "notFoundError": "Ups! Nie ma pokoju o takiej nazwie \ud83c\udf88",
+    "connectionError": "Błąd połączenia 🔌",
+    "timeoutError": "Przekroczono czas oczekiwania ⏱️",
+    "notFoundError": "Ups! Nie ma pokoju o takiej nazwie 🎈",
     "title": "Dołącz do gry",
     "description": "Wpisz kod, aby dołączyć do aktywnej sesji.",
     "inputLabel": "Tajna Nazwa Pokoju",
