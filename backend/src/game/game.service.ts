@@ -7,7 +7,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BoardsService } from '../boards/boards.service';
 import { Game } from './game.entity';
-import type { BoardPayload, CategoryPayload, GameStatusValue } from './game.types';
+import type {
+  BoardPayload,
+  CategoryPayload,
+  GameStatusValue,
+  HintType,
+} from './game.types';
 
 const MAX_MISTAKES = 4;
 
@@ -30,6 +35,7 @@ export class GameService {
       solvedCategoryIndices: [],
       mistakes: 0,
       guessCount: 0,
+      hintUsed: false,
       finishedAt: null,
     });
     const saved = await this.gamesRepository.save(game);
@@ -116,6 +122,41 @@ export class GameService {
       gameEnded: game.status !== 'in_progress',
       ...updated,
     };
+  }
+
+  async hint(gameId: string, type: HintType) {
+    if (type !== 'pair' && type !== 'category') {
+      throw new BadRequestException('Invalid hint type');
+    }
+
+    const game = await this.gamesRepository.findOne({ where: { id: gameId } });
+    if (!game) {
+      throw new NotFoundException();
+    }
+    if (game.status !== 'in_progress') {
+      throw new BadRequestException('Game has already ended');
+    }
+    if (game.hintUsed) {
+      throw new BadRequestException('Hint already used');
+    }
+
+    const solved = new Set(game.solvedCategoryIndices);
+    const unsolvedIndex = game.boardJson.categories.findIndex(
+      (_, i) => !solved.has(i),
+    );
+    if (unsolvedIndex === -1) {
+      throw new BadRequestException('No categories left to reveal');
+    }
+
+    const category = game.boardJson.categories[unsolvedIndex];
+
+    game.hintUsed = true;
+    await this.gamesRepository.save(game);
+
+    if (type === 'category') {
+      return { type, categoryName: category.name };
+    }
+    return { type, words: category.words.slice(0, 2) };
   }
 
   private parseAndValidateBoard(raw: unknown): BoardPayload {
@@ -212,6 +253,7 @@ export class GameService {
       mistakes: game.mistakes,
       maxMistakes: MAX_MISTAKES,
       guessCount: game.guessCount,
+      hintUsed: game.hintUsed,
       revealedCategories,
     };
 

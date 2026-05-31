@@ -19,6 +19,7 @@ export const BR_EVENTS = {
   LEAVE_SESSION: 'br:leave_session',
   START_ROUND: 'br:start_round',
   GUESS: 'br:guess',
+  HINT: 'br:hint',
   GET_STATE: 'br:get_state',
 
   SESSION_CREATED: 'br:session_created',
@@ -27,6 +28,7 @@ export const BR_EVENTS = {
   ROUND_ENDED: 'br:round_ended',
   GAME_FINISHED: 'br:game_finished',
   GUESS_RESULT: 'br:guess_result',
+  HINT_RESULT: 'br:hint_result',
   LEADERBOARD: 'br:leaderboard',
   ELIMINATED: 'br:eliminated',
   ERROR: 'br:error',
@@ -201,6 +203,22 @@ export class BattleRoyaleGateway
         allCategoriesSolved: result.allCategoriesSolved,
       });
 
+    } catch (e: unknown) {
+      return this.emitError(client, (e as Error).message);
+    }
+  }
+
+  @SubscribeMessage(BR_EVENTS.HINT)
+  handleHint(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: { sessionId: string; userId: string; type: 'pair' | 'category' },
+  ) {
+    if (!body?.sessionId || !body?.userId || !body?.type) {
+      return this.emitError(client, 'sessionId, userId and type are required');
+    }
+    try {
+      const result = this.brService.handleHint(body.sessionId, body.userId, body.type);
+      client.emit(BR_EVENTS.HINT_RESULT, result);
     } catch (e: unknown) {
       return this.emitError(client, (e as Error).message);
     }

@@ -29,6 +29,9 @@ export class Game {
   @Column({ name: 'guess_count', type: 'int' })
   guessCount: number;
 
+  @Column({ name: 'hint_used', type: 'boolean', default: false })
+  hintUsed: boolean;
+
   @CreateDateColumn({ name: 'started_at', type: 'timestamptz' })
   startedAt: Date;
 

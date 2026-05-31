@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { BoardsService } from '../boards/boards.service';
-import type { BoardPayload, CategoryPayload } from '../game/game.types';
+import type { BoardPayload, CategoryPayload, HintType } from '../game/game.types';
 import type {
   BRLeaderboardEntry,
   BRPlayerState,
@@ -13,12 +13,14 @@ import type {
 
 const DEFAULTS = {
   MAX_ROUNDS: 5,
-  ROUND_DURATION_MS: 60_000,   
-  COOLDOWN_MS: 5_000,          
+  ROUND_DURATION_MS: 60_000,
+  COOLDOWN_MS: 5_000,
   ELIMINATED_PER_ROUND: 1,
   TOPIC: 'General',
   DIFFICULTY: 'Medium',
 } as const;
+
+const HINT_PENALTY_MS = 20_000;
 
 export type BREventEmitter = {
   onRoundStarted: (sessionId: string, state: BRPublicRound) => void;
@@ -287,6 +289,52 @@ export class BattleRoyaleService {
         allCategoriesSolved: false,
       };
     }
+  }
+
+  handleHint(
+    sessionId: string,
+    userId: string,
+    type: HintType,
+  ): {
+    type: HintType;
+    words?: string[];
+    categoryName?: string;
+    cooldownMs: number;
+  } {
+    if (type !== 'pair' && type !== 'category') {
+      throw new BadRequestException('Invalid hint type');
+    }
+
+    const session = this.getOrThrow(sessionId);
+    if (session.status !== 'round_active') {
+      throw new BadRequestException('No active round');
+    }
+
+    const player = session.players.get(userId);
+    if (!player) throw new BadRequestException('Player not in session');
+    if (player.isEliminated) throw new BadRequestException('Player is eliminated');
+
+    const board = session.board!;
+    const solved = new Set(player.solvedCategoryIndicesThisRound);
+    const unsolvedIndex = board.categories.findIndex((_, i) => !solved.has(i));
+    if (unsolvedIndex === -1) {
+      throw new BadRequestException('No categories left to reveal');
+    }
+
+    const category = board.categories[unsolvedIndex];
+
+    const now = new Date();
+    const base =
+      player.cooldownUntil && player.cooldownUntil > now
+        ? player.cooldownUntil.getTime()
+        : now.getTime();
+    player.cooldownUntil = new Date(base + HINT_PENALTY_MS);
+    const cooldownMs = player.cooldownUntil.getTime() - now.getTime();
+
+    if (type === 'category') {
+      return { type, categoryName: category.name, cooldownMs };
+    }
+    return { type, words: category.words.slice(0, 2), cooldownMs };
   }
 
   toPublicRound(session: BRSession): BRPublicRound {
