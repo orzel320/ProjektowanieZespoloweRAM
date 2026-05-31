@@ -144,6 +144,11 @@ export default function MainMenuClient({ dict }) {
         localStorage.removeItem('user');
     };
 
+    const toggleLanguage = () => {
+        const newLang = lang === 'pl' ? 'en' : 'pl';
+        router.push(`/${newLang}`);
+    };
+
     return (
         <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-200/40 rounded-full blur-[120px] pointer-events-none"></div>
@@ -164,11 +169,18 @@ export default function MainMenuClient({ dict }) {
                 </div>*/}
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-6 z-20 bg-white/40 backdrop-blur-xl border-b border-green-100/50 sticky top-0">
-                <div className="text-2xl font-black tracking-tight flex items-center leading-none">
-                    connections<span className="text-emerald-500">++</span>
-                </div>
+            <div className="text-2xl font-black tracking-tight flex items-center leading-none">
+                connections<span className="text-emerald-500">++</span>
+            </div>
 
-                <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+                <button
+                    onClick={toggleLanguage}
+                    title={lang === 'pl' ? 'Switch to English' : 'Zmień na polski'}
+                    className="flex items-center justify-center w-10 h-10 bg-white border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
+                >
+                    {lang === 'pl' ? 'EN' : 'PL'}
+                </button>
                     {user ? (
                         <div className="flex items-center gap-2">
                             <button
