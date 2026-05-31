@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import GameGrid from '@/components/Board';
 
@@ -25,6 +25,8 @@ const mockWords = [
 
 export default function PlayPage({ dict, lang }) {
     const router = useRouter();
+    const params = useParams();
+    const currentLang = lang || params.lang;
 
     const [gameId, setGameId] = useState('');
     const [words, setWords] = useState(mockWords);
@@ -104,7 +106,7 @@ export default function PlayPage({ dict, lang }) {
 
     const handleLobbyClick = () => {
         console.log('Navigating back to the main lobby...');
-        router.push('/');
+        router.push(`/${currentLang}`);
     };
 
     // If game has not started, show the beautiful settings screen
@@ -116,7 +118,7 @@ export default function PlayPage({ dict, lang }) {
 
                 <header className="w-full flex items-center justify-between px-8 py-5 bg-white/60 backdrop-blur-md border-b border-green-100/50 sticky top-0 z-10">
                     <div className="flex items-center gap-6">
-                        <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                        <Link href={`/${currentLang}`} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
                             <span>← {dict.play.backMenu}</span>
                         </Link>
                         <div className="text-xl font-bold tracking-tight flex items-center gap-2">

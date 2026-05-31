@@ -1,12 +1,13 @@
 'use client';
 
 import {useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 
 export default function MainMenuClient({ dict }) {
-
     const router = useRouter();
+    const params = useParams();
+    const lang = params.lang;
 
     const [loggedUser, setLoggedUser] = useState(null);
 
@@ -237,7 +238,7 @@ export default function MainMenuClient({ dict }) {
                         </p>
 
                         <button
-                            onClick={() => router.push('/play')}
+                            onClick={() => router.push(`/${lang}/play`)}
                             className="block w-full sm:w-max px-16 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-xl uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0"
                         >
                             {dict.mainMenu.playBtn}
@@ -283,14 +284,14 @@ export default function MainMenuClient({ dict }) {
                         {/* Action Buttons with Protection */}
                         <div className="flex flex-col sm:flex-row gap-5">
                             <button
-                                onClick={() => handleProtectedAction(`/create-room?mode=${selectedMode}`)}
+                                onClick={() => handleProtectedAction(`/${lang}/create-room?mode=${selectedMode}`)}
                                 className="flex-1 py-5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-lg uppercase tracking-[0.15em] rounded-2xl shadow-xl shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0"
                             >
                                 {dict.mainMenu.createRoomBtn}
                             </button>
 
                             <button
-                                onClick={() => handleProtectedAction('/join-room')}
+                                onClick={() => handleProtectedAction(`/${lang}/join-room`)}
                                 className="flex-1 py-5 bg-white border-2 border-emerald-50 hover:border-emerald-200 text-emerald-600 font-black text-lg uppercase tracking-[0.15em] rounded-2xl shadow-sm transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0"
                             >
                                 {dict.mainMenu.joinRoomBtn}

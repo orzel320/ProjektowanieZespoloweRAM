@@ -60,6 +60,7 @@ export class BattleRoyaleService {
         config.playersEliminatedPerRound ?? DEFAULTS.ELIMINATED_PER_ROUND,
       topic: config.topic ?? DEFAULTS.TOPIC,
       difficulty: config.difficulty ?? DEFAULTS.DIFFICULTY,
+      language: config.language ?? 'en',
       status: 'waiting',
       currentRound: 0,
       board: null,
@@ -147,6 +148,7 @@ export class BattleRoyaleService {
     const rawBoard = await this.boardsService.generate(
       topic ?? session.topic,
       difficulty ?? session.difficulty,
+      session.language || 'en'
     );
     session.board = this.parseBoard(rawBoard);
 

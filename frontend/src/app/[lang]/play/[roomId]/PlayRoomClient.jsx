@@ -10,6 +10,7 @@ export default function PlayRoomPage({ dict }) {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
+    const lang = params.lang;
 
     const roomId = params?.roomId;
     const sessionId = searchParams.get('sessionId');
@@ -42,7 +43,7 @@ export default function PlayRoomPage({ dict }) {
 
     useEffect(() => {
         if (!sessionId) {
-            router.push('/');
+            router.push(`/${lang}`);
             return;
         }
         let cancelled = false;
@@ -121,7 +122,7 @@ export default function PlayRoomPage({ dict }) {
                 const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
                 const data = await res.json();
                 if (!data.authenticated) {
-                    router.push('/');
+                    router.push(`/${lang}`);
                     return;
                 }
                 if (cancelled) return;
@@ -129,7 +130,7 @@ export default function PlayRoomPage({ dict }) {
                 connect(data.user);
             } catch (e) {
                 console.error(e);
-                router.push('/');
+                router.push(`/${lang}`);
             }
         };
 
@@ -191,7 +192,7 @@ export default function PlayRoomPage({ dict }) {
     };
 
     const handleLeave = () => {
-        router.push('/');
+        router.push(`/${lang}`);
     };
 
     const handleHintRequest = (type) => {

@@ -241,14 +241,14 @@ export default function GameGrid({
         <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 relative">
             <header className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm mb-8">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex justify-between items-center relative">
-                    <button onClick={onLobbyClick} className="px-3 py-2 font-bold text-slate-600 z-30 hover:text-slate-900 transition-colors">← {dict.Board.lobby}</button>
+                    <button onClick={onLobbyClick} className="px-3 py-2 font-bold text-slate-600 z-30 hover:text-slate-900 transition-colors">← {dict.board.lobby}</button>
                     <div className="absolute inset-0 flex items-center justify-center">
                         <h1 className="text-xl font-black">CONNECTIONS<span className="text-emerald-500">++</span></h1>
                     </div>
                     <div className="z-30 flex items-center gap-4">
                         <span className="font-mono font-bold text-slate-400 hidden sm:block">{formatTime(seconds)}</span>
                         <button onClick={() => setIsInfoModalOpen(true)} className="w-10 h-10 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl font-bold text-slate-600">?</button>
-                        <button onClick={handleLogout} className="px-3 py-2 font-bold text-slate-600 z-30 hover:text-slate-900 transition-colors">{dict.Board.logout}</button>
+                        <button onClick={handleLogout} className="px-3 py-2 font-bold text-slate-600 z-30 hover:text-slate-900 transition-colors">{dict.board.logout}</button>
                     </div>
                 </div>
             </header>
@@ -258,14 +258,14 @@ export default function GameGrid({
                 {hintCategory && (
                     <div className="absolute top-[-20px] left-0 w-full flex justify-center z-10 animate-pop-in">
                         <div className="bg-blue-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-500/30">
-                            {dict.Board.hintPrefix}: {hintCategory}
+                            {dict.board.hintPrefix}: {hintCategory}
                         </div>
                     </div>
                 )}
 
                 {status !== 'game_over' && status !== 'won' && status !== 'revealing' && (
                     <div className="flex flex-col items-center mb-6 h-16">
-                        <h2 className="text-xl font-extrabold uppercase mb-4 text-slate-700">{dict.Board.instruction}</h2>
+                        <h2 className="text-xl font-extrabold uppercase mb-4 text-slate-700">{dict.board.instruction}</h2>
                         <div className="flex gap-2">
                             {[...Array(4)].map((_, i) => (
                                 <div key={i} className={`w-4 h-4 rounded-full transition-colors ${i < mistakesRemaining ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-slate-200'}`} />
@@ -277,7 +277,7 @@ export default function GameGrid({
                 {oneAway && (
                     <div className="flex flex-col items-center bg-white rounded-3xl p-8 shadow-sm border border-slate-200 animate-pop-in mt-8 text-center">
                         <h2 className={`text-3xl font-black uppercase mb-2 ${status === 'won' ? 'text-emerald-500' : 'text-slate-600'}`}>
-                            {dict.Board.oneAway}
+                            {dict.board.oneAway}
                         </h2>
                     </div>
                 )}
@@ -294,7 +294,7 @@ export default function GameGrid({
                 {status === 'game_over' || status === 'won' ? (
                     <div className="flex flex-col items-center bg-white rounded-3xl p-8 shadow-sm border border-slate-200 animate-pop-in mt-8 text-center">
                         <h2 className={`text-3xl font-black uppercase mb-2 ${status === 'won' ? 'text-emerald-500' : 'text-slate-600'}`}>
-                            {status === 'won' ? dict.Board.perfect : dict.Board.nextTime}
+                            {status === 'won' ? dict.board.perfect : dict.board.nextTime}
                         </h2>
 
                         <div className="flex gap-6 my-4 text-slate-500 font-bold uppercase tracking-wider text-xs">
@@ -321,10 +321,10 @@ export default function GameGrid({
 
                         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                             <button onClick={onLobbyClick} className="px-8 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all">
-                                {dict.Board.backLobby}
+                                {dict.board.backLobby}
                             </button>
                             <button onClick={handleNextPuzzle} className="px-8 py-3 rounded-2xl font-black shadow-lg transition-all bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] active:scale-95">
-                                {dict.Board.nextPuzzle}
+                                {dict.board.nextPuzzle}
                             </button>
                         </div>
                     </div>
@@ -371,8 +371,8 @@ export default function GameGrid({
 
                 {status !== 'game_over' && status !== 'won' && status !== 'revealing' && (
                     <div className="flex justify-center gap-3 mt-8 h-12 flex-wrap">
-                        <button onClick={() => setDisplayWords([...displayWords].sort(() => Math.random() - 0.5))} className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base">{dict.Board.shuffle}</button>
-                        <button onClick={() => setSelectedIds([])} className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base">{dict.Board.clear}</button>
+                        <button onClick={() => setDisplayWords([...displayWords].sort(() => Math.random() - 0.5))} className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base">{dict.board.shuffle}</button>
+                        <button onClick={() => setSelectedIds([])} className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base">{dict.board.clear}</button>
                         <button
                             onClick={() => setIsHintModalOpen(true)}
                             disabled={hintUsed || status !== 'idle'}
@@ -380,14 +380,14 @@ export default function GameGrid({
                                 hintUsed ? 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed' : 'border-purple-200 text-purple-600 hover:bg-purple-50'
                             }`}
                         >
-                            {hintUsed ? dict.Board.hintUsedBtn : dict.Board.hintBtn}
+                            {hintUsed ? dict.board.hintUsedBtn : dict.board.hintBtn}
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={selectedIds.length !== 4 || status !== 'idle'}
                             className={`px-8 sm:px-10 py-3 rounded-2xl font-black shadow-lg transition-all text-sm sm:text-base ${selectedIds.length === 4 ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-slate-200 text-slate-400 shadow-none'}`}
                         >
-                            {dict.Board.submit}
+                            {dict.board.submit}
                         </button>
                     </div>
                 )}
@@ -398,11 +398,11 @@ export default function GameGrid({
                 <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-pop-in">
                         <button onClick={() => setIsInfoModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 font-bold transition-colors">✕</button>
-                        <h2 className="text-2xl font-black mb-6 text-slate-800">{dict.Board.infoTitle}</h2>
+                        <h2 className="text-2xl font-black mb-6 text-slate-800">{dict.board.infoTitle}</h2>
                         <ul className="space-y-4 text-slate-600 font-medium list-disc pl-5">
-                            <li>{dict.Board.infoRule1}</li>
-                            <li>{dict.Board.infoRule2Start} <span className="font-bold text-slate-800">{dict.Board.submit}</span> {dict.Board.infoRule2End}</li>
-                            <li>{dict.Board.infoRule3}</li>
+                            <li>{dict.board.infoRule1}</li>
+                            <li>{dict.board.infoRule2Start} <span className="font-bold text-slate-800">{dict.board.submit}</span> {dict.board.infoRule2End}</li>
+                            <li>{dict.board.infoRule3}</li>
                         </ul>
                     </div>
                 </div>
@@ -413,15 +413,15 @@ export default function GameGrid({
                 <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-pop-in">
                         <button onClick={() => setIsHintModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 font-bold transition-colors">✕</button>
-                        <h2 className="text-2xl font-black mb-2 text-slate-800">{dict.Board.hintTitle}</h2>
-                        <p className="text-xs font-bold text-emerald-500 mb-6 uppercase tracking-widest">{dict.Board.hintSubtitle}</p>
+                        <h2 className="text-2xl font-black mb-2 text-slate-800">{dict.board.hintTitle}</h2>
+                        <p className="text-xs font-bold text-emerald-500 mb-6 uppercase tracking-widest">{dict.board.hintSubtitle}</p>
 
                         <div className="flex flex-col gap-4">
                             <button onClick={() => handleHintRequest('words')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
-                                {dict.Board.hintOption1}
+                                {dict.board.hintOption1}
                             </button>
                             <button onClick={() => handleHintRequest('category')} className="w-full py-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200 shadow-sm active:scale-95">
-                                {dict.Board.hintOption2}
+                                {dict.board.hintOption2}
                             </button>
                         </div>
                     </div>

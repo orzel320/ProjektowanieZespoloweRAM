@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { io } from 'socket.io-client';
 
 export default function JoinRoomPage({ dict }) {
@@ -14,6 +14,8 @@ export default function JoinRoomPage({ dict }) {
 
     const socketRef = useRef(null);
     const router = useRouter();
+    const params = useParams();
+    const lang = params.lang;
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
@@ -62,7 +64,7 @@ export default function JoinRoomPage({ dict }) {
                 setRecentRooms(history);
                 localStorage.setItem('recentRooms', JSON.stringify(history));
 
-                router.push(`/lobby/${code}`);
+                router.push(`/${lang}/lobby/${code}`);
             } else {
                 setError(dict.joinRoom.notFoundError);
                 setTimeout(() => setError(''), 3000);
@@ -79,7 +81,7 @@ export default function JoinRoomPage({ dict }) {
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/60 backdrop-blur-md border-b border-green-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
-                    <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                    <Link href={`/${lang}`} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
                         <span>← {dict.joinRoom.backMenu}</span>
                     </Link>
                     <div className="text-xl font-bold tracking-tight">

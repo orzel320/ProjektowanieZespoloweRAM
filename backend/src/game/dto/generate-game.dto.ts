@@ -6,4 +6,7 @@ export class GenerateGameDto {
 
   @ApiProperty({ example: 'Hard' })
   difficulty: string;
+
+  @ApiProperty({ example: 'en', required: false }) 
+  language: string;
 }

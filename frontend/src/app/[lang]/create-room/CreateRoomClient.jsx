@@ -2,11 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 
 function CreateRoomContent({ dict }) {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const routeParams = useParams();
+    const lang = routeParams.lang;
 
     const [user, setUser] = useState(null);
 
@@ -50,7 +52,7 @@ function CreateRoomContent({ dict }) {
             difficulty,
             topic: topic.trim() || 'General',
         });
-        router.push(`/lobby/new?${params.toString()}`);
+        router.push(`/${lang}/lobby/new?${params.toString()}`);
     };
 
     return (
@@ -60,7 +62,7 @@ function CreateRoomContent({ dict }) {
 
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/60 backdrop-blur-md border-b border-green-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
-                    <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                    <Link href={`/${lang}`} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
                         <span>← {dict.createRoom.backMenu}</span>
                     </Link>
                     <div className="text-xl font-bold tracking-tight flex items-center gap-2">

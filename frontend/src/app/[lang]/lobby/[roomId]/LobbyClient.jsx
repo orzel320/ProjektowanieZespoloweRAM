@@ -8,6 +8,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
+    const lang = params.lang;
 
     // const initialRoomId = params?.roomId;
     const isCreating = searchParams.get('create') === '1';
@@ -36,7 +37,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
             socket.on('lobby:room_created', (r) => {
                 updateRoom(r);
                 if (typeof window !== 'undefined') {
-                    const nextUrl = `/lobby/${r.roomId}?mode=${r.config.mode}`;
+                    const nextUrl = `/${lang}/lobby/${r.roomId}?mode=${r.config.mode}`;
                     window.history.replaceState(null, '', nextUrl);
                 }
             });
@@ -44,7 +45,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
             socket.on('lobby:room_updated', updateRoom);
 
             socket.on('lobby:room_deleted', () => {
-                if (!gameStartedRef.current) router.push('/');
+                if (!gameStartedRef.current) router.push(`/${lang}`);
             });
 
             socket.on('lobby:game_started', ({ roomId, sessionId }) => {
@@ -52,7 +53,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
                 const r = roomRef.current;
                 const expected = r?.players?.length ?? 2;
                 const isHost = !!r?.players?.find((p) => p.userId === u.id)?.isHost;
-                router.push(`/play/${roomId}?sessionId=${sessionId}&expected=${expected}&host=${isHost ? 1 : 0}`);
+                router.push(`/${lang}/play/${roomId}?sessionId=${sessionId}&expected=${expected}&host=${isHost ? 1 : 0}`);
             });
 
             socket.on('lobby:error', ({ message }) => setError(message));
@@ -67,6 +68,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
                         roundDurationMs: Number(searchParams.get('roundDurationMs')) || 60000,
                         difficulty: searchParams.get('difficulty') || 'Medium',
                         topic: searchParams.get('topic') || 'General',
+                        language: lang
                     });
                 } else {
                     socket.emit('lobby:join_room', {
@@ -83,7 +85,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
                 const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
                 const data = await res.json();
                 if (!data.authenticated) {
-                    router.push('/');
+                    router.push(`/${lang}`);
                     return;
                 }
                 if (cancelled) return;
@@ -91,7 +93,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
                 connect(data.user);
             } catch (e) {
                 console.error(e);
-                router.push('/');
+                router.push(`/${lang}`);
             }
         };
 
@@ -130,7 +132,7 @@ export default function LobbyPage({ dict, initialRoomId }) {
     };
 
     const handleLeave = () => {
-        router.push('/');
+        router.push(`/${lang}`);
     };
 
     return (
