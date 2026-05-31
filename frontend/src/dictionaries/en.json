@@ -16,9 +16,9 @@
     "logout": "LOG OUT",
     "offlineLabel": "OFFLINE",
     "onlineLabel": "ONLINE",
-    "authErrorStart": "A-a-a! Musisz się najpierw ",
-    "authErrorLink": "zalogować",
-    "authErrorEnd": "!"
+    "authErrorStart": "A-a-a! You need to ",
+    "authErrorLink": "log in",
+    "authErrorEnd": " first!"
   },
   "auth": {
     "loginTitle": "Log In",
@@ -42,7 +42,7 @@
     "categoryPlaceholder": "e.g. Movies, Space, General",
     "playerLimit": "Player Limit",
     "roundTime": "Round Time",
-    "difficultyLabel": "Difficulty",
+    "difficulty": "Difficulty",
     "difficulties": {
       "Easy": "Easy",
       "Medium": "Medium",
@@ -81,9 +81,9 @@
   "joinRoom": {
     "backMenu": "Menu",
     "guest": "guest",
-    "connectionError": "Connection error \ud83d\udd0c",
-    "timeoutError": "Server timed out \u23f1\ufe0f",
-    "notFoundError": "Oopsi! There is not a room with such a name \ud83c\udf88",
+    "connectionError": "Connection error 🔌",
+    "timeoutError": "Server timed out ⏱️",
+    "notFoundError": "Oopsi! There is not a room with such a name 🎈",
     "title": "Join Game",
     "description": "Enter the code to join an active session.",
     "inputLabel": "Secret Room ID",

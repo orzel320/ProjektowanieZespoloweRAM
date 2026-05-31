@@ -58,19 +58,18 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
     const { room, roomId, roomDeleted } = this.lobbyService.leaveRoom(client.id);
-
-    if (!roomId && !roomDeleted) return;
-
     if (roomDeleted) {
       this.server.emit(WS_EVENTS.ROOM_DELETED, { roomId });
-      return;
-    }
-
-    if (room) {
+    } else if (room) {
       const publicRoom = this.lobbyService.toPublic(room);
       this.server.to(room.roomId).emit(WS_EVENTS.ROOM_UPDATED, publicRoom);
-      this.broadcastRoomsList();
     }
+    this.broadcastRoomsList();
+  }
+
+  @SubscribeMessage(WS_EVENTS.LIST_ROOMS)
+  handleListRooms() {
+    return this.lobbyService.listWaitingRooms();
   }
 
   @SubscribeMessage(WS_EVENTS.CREATE_ROOM)
@@ -85,6 +84,7 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       roundDurationMs?: number;
       difficulty?: string;
       topic?: string;
+      language?: string;
       maxRounds?: number;
       playersEliminatedPerRound?: number;
     },
@@ -98,6 +98,7 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       roundDurationMs: body.roundDurationMs,
       difficulty: body.difficulty,
       topic: body.topic,
+      language: body.language,
       maxRounds: body.maxRounds,
       playersEliminatedPerRound: body.playersEliminatedPerRound,
     });
@@ -184,7 +185,6 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       return this.emitError(client, 'Need at least 2 players to start');
     }
 
-    // Allow restart after a previous finished session for the same room.
     this.brService.destroyFinishedSessionByRoom(room.roomId);
 
     let sessionId: string;
@@ -196,6 +196,7 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
         playersEliminatedPerRound: room.config.playersEliminatedPerRound,
         topic: room.config.topic,
         difficulty: room.config.difficulty,
+        language: room.config.language,
       });
       sessionId = session.sessionId;
     } catch (e: unknown) {
@@ -218,35 +219,22 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
         roundDurationMs: room.config.roundDurationMs,
         difficulty: room.config.difficulty,
         topic: room.config.topic,
+        language: room.config.language,
       },
     });
-
-    this.broadcastRoomsList();
-    return { success: true, sessionId };
-  }
-
-  @SubscribeMessage(WS_EVENTS.LIST_ROOMS)
-  handleListRooms(@ConnectedSocket() client: Socket) {
-    const rooms = this.lobbyService.listWaitingRooms();
-    client.emit(WS_EVENTS.ROOMS_LIST, rooms);
-    return rooms;
   }
 
   private emitError(client: Socket, message: string) {
     client.emit(WS_EVENTS.ERROR, { message });
-    return { error: message };
   }
 
   private broadcastRoomsList() {
-    const rooms = this.lobbyService.listWaitingRooms();
-    this.server.emit(WS_EVENTS.ROOMS_LIST, rooms);
+    this.server.emit(WS_EVENTS.ROOMS_LIST, this.lobbyService.listWaitingRooms());
   }
 }
 
-function pickDefined<T extends Record<string, unknown>>(o: T): Partial<T> {
-  const out: Partial<T> = {};
-  for (const k in o) {
-    if (o[k] !== undefined) out[k] = o[k];
-  }
-  return out;
+function pickDefined<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  ) as Partial<T>;
 }
