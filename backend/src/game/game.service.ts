@@ -6,13 +6,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BoardsService } from '../boards/boards.service';
+import { StatsService } from '../user/stats.service';
+import { AuthService } from '../auth/auth.service';
 import { Game } from './game.entity';
-import type {
-  BoardPayload,
-  CategoryPayload,
-  GameStatusValue,
-  HintType,
-} from './game.types';
+import type { BoardPayload, CategoryPayload, GameStatusValue } from './game.types';
 
 const MAX_MISTAKES = 4;
 
@@ -21,11 +18,13 @@ export class GameService {
   constructor(
     @InjectRepository(Game)
     private readonly gamesRepository: Repository<Game>,
+    private readonly authService: AuthService,  //for getting logged user id
+    private readonly statsService: StatsService,
     private readonly boardsService: BoardsService,
   ) {}
 
-  async generate(topic: string, difficulty: string, language: string) {
-    const raw = await this.boardsService.generate(topic, difficulty, language);
+  async generate(topic: string, difficulty: string) {
+    const raw = await this.boardsService.generate(topic, difficulty);
     const board = this.parseAndValidateBoard(raw);
     const gridOrder = this.shuffle(board.categories.flatMap((c) => c.words));
     const game = this.gamesRepository.create({
@@ -35,7 +34,6 @@ export class GameService {
       solvedCategoryIndices: [],
       mistakes: 0,
       guessCount: 0,
-      hintUsed: false,
       finishedAt: null,
     });
     const saved = await this.gamesRepository.save(game);
@@ -95,13 +93,18 @@ export class GameService {
       }
     }
 
+    const previousStatus = game.status;
     game.guessCount += 1;
 
     if (matchedIndex !== null) {
       const nextSolved = [...game.solvedCategoryIndices, matchedIndex].sort(
+
         (a, b) => a - b,
+
       );
+
       game.solvedCategoryIndices = nextSolved;
+
       if (nextSolved.length === 4) {
         game.status = 'won';
         game.finishedAt = new Date();
@@ -115,6 +118,13 @@ export class GameService {
     }
 
     await this.gamesRepository.save(game);
+
+    // Update statistics if game just ended and user is authenticated
+    const userId = this.authService.getUserId();
+    if (previousStatus === 'in_progress' && game.status !== 'in_progress' && userId) {
+      await this.statsService.updateStatistics(game, userId);
+    }
+
     const updated = this.toPublicState(game);
 
     return {
@@ -122,41 +132,6 @@ export class GameService {
       gameEnded: game.status !== 'in_progress',
       ...updated,
     };
-  }
-
-  async hint(gameId: string, type: HintType) {
-    if (type !== 'pair' && type !== 'category') {
-      throw new BadRequestException('Invalid hint type');
-    }
-
-    const game = await this.gamesRepository.findOne({ where: { id: gameId } });
-    if (!game) {
-      throw new NotFoundException();
-    }
-    if (game.status !== 'in_progress') {
-      throw new BadRequestException('Game has already ended');
-    }
-    if (game.hintUsed) {
-      throw new BadRequestException('Hint already used');
-    }
-
-    const solved = new Set(game.solvedCategoryIndices);
-    const unsolvedIndex = game.boardJson.categories.findIndex(
-      (_, i) => !solved.has(i),
-    );
-    if (unsolvedIndex === -1) {
-      throw new BadRequestException('No categories left to reveal');
-    }
-
-    const category = game.boardJson.categories[unsolvedIndex];
-
-    game.hintUsed = true;
-    await this.gamesRepository.save(game);
-
-    if (type === 'category') {
-      return { type, categoryName: category.name };
-    }
-    return { type, words: category.words.slice(0, 2) };
   }
 
   private parseAndValidateBoard(raw: unknown): BoardPayload {
@@ -253,7 +228,6 @@ export class GameService {
       mistakes: game.mistakes,
       maxMistakes: MAX_MISTAKES,
       guessCount: game.guessCount,
-      hintUsed: game.hintUsed,
       revealedCategories,
     };
 
