@@ -3,13 +3,21 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
 } from 'typeorm';
 import type { BoardPayload, GameStatusValue } from './game.types';
+import { User } from '../user/user.entity';
 
 @Entity({ name: 'games' })
 export class Game {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' }) //added
+  user: User | null;
+
+  @Column({ name: 'user_id', nullable: true })
+  userId: string | null;
 
   @Column({ type: 'varchar', length: 20 })
   status: GameStatusValue;
