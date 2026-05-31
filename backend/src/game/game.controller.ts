@@ -19,7 +19,7 @@ export class GameController {
   @Post('generate')
   @ApiBody({ type: GenerateGameDto })
   async generate(@Body() body: GenerateGameDto) {
-    return this.gameService.generate(body.topic, body.difficulty);
+    return this.gameService.generate(body.topic, body.difficulty, body.language);
   }
 
   @Post(':gameId/guess')

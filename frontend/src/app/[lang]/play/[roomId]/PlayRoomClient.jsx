@@ -6,10 +6,11 @@ import { io } from 'socket.io-client';
 
 const CATEGORY_COLORS = ['bg-yellow-400', 'bg-emerald-400', 'bg-blue-400', 'bg-purple-400'];
 
-export default function PlayRoomPage() {
+export default function PlayRoomPage({ dict }) {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
+    const lang = params.lang;
 
     const roomId = params?.roomId;
     const sessionId = searchParams.get('sessionId');
@@ -42,7 +43,7 @@ export default function PlayRoomPage() {
 
     useEffect(() => {
         if (!sessionId) {
-            router.push('/');
+            router.push(`/${lang}`);
             return;
         }
         let cancelled = false;
@@ -121,7 +122,7 @@ export default function PlayRoomPage() {
                 const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
                 const data = await res.json();
                 if (!data.authenticated) {
-                    router.push('/');
+                    router.push(`/${lang}`);
                     return;
                 }
                 if (cancelled) return;
@@ -129,7 +130,7 @@ export default function PlayRoomPage() {
                 connect(data.user);
             } catch (e) {
                 console.error(e);
-                router.push('/');
+                router.push(`/${lang}`);
             }
         };
 
@@ -191,7 +192,7 @@ export default function PlayRoomPage() {
     };
 
     const handleLeave = () => {
-        router.push('/');
+        router.push(`/${lang}`);
     };
 
     const handleHintRequest = (type) => {
@@ -230,7 +231,7 @@ export default function PlayRoomPage() {
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/50 backdrop-blur-xl border-b border-emerald-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
                     <button onClick={handleLeave} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-[11px] uppercase">
-                        ← Leave
+                        ← {dict.playRoom.leave}
                     </button>
                     <div className="text-xl font-bold tracking-tight">
                         <span className="text-gray-800 font-black">connections<span className="text-emerald-500 font-black">++</span></span>
@@ -239,7 +240,7 @@ export default function PlayRoomPage() {
                 <div className="flex items-center gap-3">
                     {round && (
                         <div className="text-[10px] font-black text-emerald-600 bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-emerald-50 uppercase tracking-[0.2em]">
-                            Round {round.round || 0} / {round.maxRounds}
+                            {dict.playRoom.round} {round.round || 0} / {round.maxRounds}
                         </div>
                     )}
                     {round?.status === 'round_active' && (
@@ -267,7 +268,7 @@ export default function PlayRoomPage() {
                     {cooldownRemaining > 0 && round?.status === 'round_active' && (
                         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/30 backdrop-blur-[2px] rounded-3xl m-8 pointer-events-none animate-in fade-in duration-200">
                             <span className="text-5xl font-black text-red-500 mb-2">{Math.ceil(cooldownRemaining / 1000)}s</span>
-                            <span className="text-xs font-bold text-red-400 uppercase tracking-widest bg-white/80 px-4 py-1 rounded-full">Penalty Cooldown Active</span>
+                            <span className="text-xs font-bold text-red-400 uppercase tracking-widest bg-white/80 px-4 py-1 rounded-full">{dict.playRoom.penaltyActive}</span>
                         </div>
                     )}
 
@@ -279,8 +280,8 @@ export default function PlayRoomPage() {
 
                     {finished ? (
                         <div className="bg-white rounded-3xl p-10 shadow-sm border border-emerald-50 text-center">
-                            <h2 className="text-3xl font-black text-emerald-500 uppercase mb-2">Game Over</h2>
-                            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mb-8">Final Standings</p>
+                            <h2 className="text-3xl font-black text-emerald-500 uppercase mb-2">{dict.playRoom.GameOver}</h2>
+                            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mb-8">{dict.playRoom.finalStandings}</p>
                             <div className="flex flex-col gap-2 mb-8">
                                 {sortedLeaderboard.map((p, i) => (
                                     <div key={p.userId} className={`flex items-center justify-between px-5 py-4 rounded-2xl border-2 ${p.userId === user?.id ? 'border-emerald-400 bg-emerald-50/40' : 'border-gray-100 bg-white'}`}>
@@ -290,21 +291,21 @@ export default function PlayRoomPage() {
                                 ))}
                             </div>
                             <button onClick={handleLeave} className="px-10 py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                                Back to Menu
+                                {dict.playRoom.backToMenu}
                             </button>
                         </div>
                     ) : eliminated ? (
                         <div className="bg-white rounded-3xl p-10 shadow-sm border border-emerald-50 text-center">
-                            <h2 className="text-3xl font-black text-gray-700 uppercase mb-2">Eliminated</h2>
-                            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">You can watch the rest of the game.</p>
+                            <h2 className="text-3xl font-black text-gray-700 uppercase mb-2">{dict.playRoom.eliminated}</h2>
+                            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">{dict.playRoom.eliminatedDisc}</p>
                         </div>
                     ) : round?.status !== 'round_active' ? (
                         <div className="bg-white rounded-3xl p-10 shadow-sm border border-emerald-50 text-center">
                             <h2 className="text-2xl font-black text-gray-700 uppercase mb-2">
-                                {round?.status === 'round_end' ? 'Round Finished' : 'Waiting for round to start'}
+                                {round?.status === 'round_end' ? dict.playRoom.roundFinished : dict.playRoom.waitingRound}
                             </h2>
                             <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">
-                                {leaderboard.length}/{expectedPlayers} players ready
+                                {leaderboard.length}/{expectedPlayers} {dict.playRoom.playerReady}
                             </p>
                         </div>
                     ) : (
@@ -347,20 +348,20 @@ export default function PlayRoomPage() {
                                     onClick={() => setDisplayWords([...displayWords].sort(() => Math.random() - 0.5))}
                                     className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base"
                                 >
-                                    SHUFFLE
+                                    {dict.playRoom.shuffle}
                                 </button>
                                 <button
                                     onClick={() => setSelectedIds([])}
                                     className="px-5 sm:px-6 py-3 border-2 border-slate-200 text-slate-700 hover:bg-slate-100 rounded-2xl font-bold active:scale-95 transition-all text-sm sm:text-base"
                                 >
-                                    CLEAR
+                                    {dict.playRoom.clear}
                                 </button>
                                 <button
                                     onClick={() => setIsHintModalOpen(true)}
                                     disabled={cooldownRemaining > 0 || round?.status !== 'round_active'}
                                     className="px-5 sm:px-6 py-3 border-2 border-purple-200 text-purple-600 hover:bg-purple-50 rounded-2xl font-bold active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                                 >
-                                    HINT (+20s)
+                                    {dict.playRoom.hintPenalty}
                                 </button>
                                 <button
                                     onClick={submit}
@@ -371,7 +372,7 @@ export default function PlayRoomPage() {
                                             : 'bg-slate-200 text-slate-400 shadow-none'
                                     }`}
                                 >
-                                    {cooldownRemaining > 0 ? `WAIT ${Math.ceil(cooldownRemaining / 1000)}s` : 'SUBMIT'}
+                                    {cooldownRemaining > 0 ? `${dict.playRoom.wait} ${Math.ceil(cooldownRemaining / 1000)}s` : dict.playRoom.submit}
                                 </button>
                             </div>
                         </>
@@ -379,7 +380,7 @@ export default function PlayRoomPage() {
                 </div>
 
                 <div className="w-full md:w-[340px] p-8 md:p-10 bg-white/20">
-                    <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] mb-4">Leaderboard</p>
+                    <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] mb-4">{dict.playRoom.leaderboard}</p>
                     <div className="flex flex-col gap-2">
                         {sortedLeaderboard.map((p, i) => (
                             <div
@@ -412,15 +413,15 @@ export default function PlayRoomPage() {
                 <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-pop-in">
                         <button onClick={() => setIsHintModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 font-bold transition-colors">✕</button>
-                        <h2 className="text-2xl font-black mb-2 text-slate-800">Choose Hint</h2>
-                        <p className="text-xs font-bold text-red-500 mb-6 uppercase tracking-widest">Warning: Adds 20s Penalty</p>
+                        <h2 className="text-2xl font-black mb-2 text-slate-800">{dict.playRoom.hintTitle}</h2>
+                        <p className="text-xs font-bold text-red-500 mb-6 uppercase tracking-widest">{dict.playRoom.hintWarning}</p>
 
                         <div className="flex flex-col gap-4">
                             <button onClick={() => handleHintRequest('words')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
-                                Show 2 Matching Words
+                                {dict.playRoom.hintOption1}
                             </button>
                             <button onClick={() => handleHintRequest('category')} className="w-full py-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200 shadow-sm active:scale-95">
-                                Show Category Name
+                                {dict.playRoom.hintOption2}
                             </button>
                         </div>
                     </div>

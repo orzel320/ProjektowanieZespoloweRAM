@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { io } from 'socket.io-client';
 
-export default function JoinRoomPage() {
+export default function JoinRoomPage({ dict }) {
     const [roomCode, setRoomCode] = useState('');
     const [user, setUser] = useState(null);
     const [recentRooms, setRecentRooms] = useState([]);
@@ -14,6 +14,8 @@ export default function JoinRoomPage() {
 
     const socketRef = useRef(null);
     const router = useRouter();
+    const params = useParams();
+    const lang = params.lang;
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
@@ -32,7 +34,7 @@ export default function JoinRoomPage() {
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
         };
-    }, []);
+    }, [dict.joinRoom.connectionError]);
 
     const handleJoin = (e) => {
         if (e) e.preventDefault();
@@ -46,7 +48,7 @@ export default function JoinRoomPage() {
         const timeout = setTimeout(() => {
             if (isChecking) {
                 setIsChecking(false);
-                setError('Server timed out ⏱️');
+                setError(dict.joinRoom.timeoutError);
             }
         }, 5000);
 
@@ -62,9 +64,9 @@ export default function JoinRoomPage() {
                 setRecentRooms(history);
                 localStorage.setItem('recentRooms', JSON.stringify(history));
 
-                router.push(`/lobby/${code}`);
+                router.push(`/${lang}/lobby/${code}`);
             } else {
-                setError('Oopsi! There is not a room with such a name 🎈');
+                setError(dict.joinRoom.notFoundError);
                 setTimeout(() => setError(''), 3000);
             }
         });
@@ -79,8 +81,8 @@ export default function JoinRoomPage() {
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/60 backdrop-blur-md border-b border-green-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
-                    <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
-                        <span>← Menu</span>
+                    <Link href={`/${lang}`} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                        <span>← {dict.joinRoom.backMenu}</span>
                     </Link>
                     <div className="text-xl font-bold tracking-tight">
                         <span className="text-gray-700">connections</span>
@@ -88,7 +90,7 @@ export default function JoinRoomPage() {
                     </div>
                 </div>
                 <div className="text-[10px] font-black text-emerald-600 bg-white px-4 py-2 rounded-2xl shadow-sm border border-emerald-50 uppercase tracking-widest">
-                    @{user?.name || 'guest'}
+                    @{user?.name || dict.joinRoom.guest}
                 </div>
             </header>
 
@@ -107,21 +109,21 @@ export default function JoinRoomPage() {
 
                 <div className="mb-12">
                     <h2 className="text-5xl md:text-6xl font-black text-gray-800 mb-4 tracking-tight">
-                        Join Game
+                        {dict.joinRoom.title}
                     </h2>
                     <p className="text-lg text-gray-500 font-medium leading-relaxed">
-                        Enter the code to join an active session.
+                        {dict.joinRoom.description}
                     </p>
                 </div>
 
                 <form onSubmit={handleJoin} className="flex flex-col gap-3 mb-10">
-                    <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] ml-2">Secret Room ID</label>
+                    <label className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.3em] ml-2">{dict.joinRoom.inputLabel}</label>
                     <div className="flex flex-col md:flex-row gap-4">
                         <input
                             type="text"
                             value={roomCode}
                             onChange={(e) => setRoomCode(e.target.value.toUpperCase())} // Сразу в верхний регистр
-                            placeholder="6-DIGIT CODE"
+                            placeholder={dict.joinRoom.placeholder}
                             maxLength={6}
                             className={`flex-1 h-20 bg-white border-2 rounded-3xl px-8 text-3xl font-black text-gray-800 tracking-[0.3em] uppercase focus:outline-none transition-all shadow-sm ${error ? 'border-red-200 bg-red-50/30' : 'border-gray-100 focus:border-emerald-400'}`}
                         />
@@ -130,7 +132,7 @@ export default function JoinRoomPage() {
                             disabled={!roomCode.trim() || isChecking}
                             className="h-20 px-12 md:w-max w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xl uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-emerald-500/20 transform hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50"
                         >
-                            {isChecking ? 'Checking...' : 'Join'}
+                            {isChecking ? dict.joinRoom.btnChecking : dict.joinRoom.btnJoin}
                         </button>
                     </div>
                 </form>
@@ -139,7 +141,7 @@ export default function JoinRoomPage() {
 
                 {/* Recent Rooms */}
                 <div className="flex flex-col gap-4">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Your recent rooms</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">{dict.joinRoom.recentTitle}</span>
                     <div className="flex flex-wrap gap-3">
                         {recentRooms.map((code) => (
                             <button
@@ -153,7 +155,7 @@ export default function JoinRoomPage() {
                             </button>
                         ))}
                         {recentRooms.length === 0 && (
-                            <p className="text-xs text-gray-400 font-medium italic ml-1">No history yet</p>
+                            <p className="text-xs text-gray-400 font-medium italic ml-1">{dict.joinRoom.noHistory}</p>
                         )}
                     </div>
                 </div>

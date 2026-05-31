@@ -1,12 +1,13 @@
 'use client';
 
 import {useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 
-export default function MainMenu() {
-
+export default function MainMenuClient({ dict }) {
     const router = useRouter();
+    const params = useParams();
+    const lang = params.lang;
 
     const [loggedUser, setLoggedUser] = useState(null);
 
@@ -143,6 +144,11 @@ export default function MainMenu() {
         localStorage.removeItem('user');
     };
 
+    const toggleLanguage = () => {
+        const newLang = lang === 'pl' ? 'en' : 'pl';
+        router.push(`/${newLang}`);
+    };
+
     return (
         <main className="flex min-h-screen flex-col bg-[#FAFCF8] text-gray-900 font-sans relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-200/40 rounded-full blur-[120px] pointer-events-none"></div>
@@ -163,18 +169,25 @@ export default function MainMenu() {
                 </div>*/}
             {/* Header */}
             <header className="w-full flex items-center justify-between px-8 py-6 z-20 bg-white/40 backdrop-blur-xl border-b border-green-100/50 sticky top-0">
-                <div className="text-2xl font-black tracking-tight flex items-center leading-none">
-                    connections<span className="text-emerald-500">++</span>
-                </div>
+            <div className="text-2xl font-black tracking-tight flex items-center leading-none">
+                connections<span className="text-emerald-500">++</span>
+            </div>
 
-                <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+                <button
+                    onClick={toggleLanguage}
+                    title={lang === 'pl' ? 'Switch to English' : 'Zmień na polski'}
+                    className="flex items-center justify-center w-10 h-10 bg-white border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
+                >
+                    {lang === 'pl' ? 'EN' : 'PL'}
+                </button>
                     {user ? (
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => {setShowStats(true)}}
                                 className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-gray-900/10 active:scale-95"
                             >
-                                Stats
+                                {dict.mainMenu.stats}
                             </button>
                             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-emerald-100 shadow-sm">
                                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
@@ -184,7 +197,7 @@ export default function MainMenu() {
                                 onClick={handleLogout}
                                 className="ml-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 border border-transparent hover:border-red-100 hover:bg-red-50 rounded-xl transition-all"
                             >
-                                Logout
+                                {dict.mainMenu.logout}
                             </button>
                             <div
                                 ref={popupRef}
@@ -196,7 +209,7 @@ export default function MainMenu() {
                             >
                                 <div className="bg-white border-2 border-emerald-400 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
                                     <p className="font-black text-gray-800 uppercase tracking-widest text-xs">
-                                        Here are your stats!
+                                        {dict.mainMenu.statsText}
                                     </p>
                                 </div>
                             </div>
@@ -206,7 +219,7 @@ export default function MainMenu() {
                             onClick={() => setIsAuthModalOpen(true)}
                             className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-gray-900/10 active:scale-95"
                         >
-                            Log In
+                            {dict.mainMenu.login}
                         </button>
                     )}
                 </div>
@@ -217,7 +230,7 @@ export default function MainMenu() {
                 <div className="bg-white border-2 border-emerald-400 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
                     <span className="text-2xl">☝️</span>
                     <p className="font-black text-gray-800 uppercase tracking-widest text-xs">
-                        A-a-a! You need to <span className="text-emerald-500 underline">log in</span> first!
+                        {dict.mainMenu.authErrorStart} <span className="text-emerald-500 underline">{dict.mainMenu.authErrorLink}</span> {dict.mainMenu.authErrorEnd}
                     </p>
                 </div>
             </div>
@@ -228,19 +241,19 @@ export default function MainMenu() {
                 {/* LEFT COLUMN: OFFLINE */}
                 <div className="w-full md:w-1/2 p-10 md:p-20 flex flex-col justify-center border-b md:border-b-0 md:border-r border-dashed border-gray-200">
                     <div className="max-w-md">
-                        <p className="text-xs font-black text-emerald-500 uppercase tracking-[0.4em] mb-4">Offline</p>
+                        <p className="text-xs font-black text-emerald-500 uppercase tracking-[0.4em] mb-4">{dict.mainMenu.offlineLabel}</p>
                         <h2 className="text-6xl md:text-7xl font-black text-gray-800 mb-6 tracking-tighter leading-none">
-                            Play Solo
+                            {dict.mainMenu.offlineTitle}
                         </h2>
                         <p className="text-lg text-gray-400 mb-12 font-medium leading-relaxed">
-                            Classic 4x4 board, no login required. Just pure word connections and patterns.
+                            {dict.mainMenu.offlineDesc}
                         </p>
 
                         <button
-                            onClick={() => router.push('/play')}
+                            onClick={() => router.push(`/${lang}/play`)}
                             className="block w-full sm:w-max px-16 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-xl uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0"
                         >
-                            Play
+                            {dict.mainMenu.playBtn}
                         </button>
                     </div>
                 </div>
@@ -248,9 +261,9 @@ export default function MainMenu() {
                 {/* RIGHT COLUMN: ONLINE */}
                 <div className="w-full md:w-1/2 p-10 md:p-20 flex flex-col justify-center">
                     <div className="max-w-md mx-auto md:mx-0">
-                        <p className="text-xs font-black text-emerald-500 uppercase tracking-[0.4em] mb-4">Online</p>
+                        <p className="text-xs font-black text-emerald-500 uppercase tracking-[0.4em] mb-4">{dict.mainMenu.onlineLabel}</p>
                         <h2 className="text-5xl md:text-6xl font-black text-gray-800 mb-10 tracking-tighter leading-none">
-                            With Others
+                            {dict.mainMenu.onlineTitle}
                         </h2>
 
                         {/* Mode Selection */}
@@ -263,8 +276,8 @@ export default function MainMenu() {
                                         : 'bg-white border-gray-100 hover:border-emerald-200'
                                 }`}
                             >
-                                <h3 className={`text-2xl font-black mb-1 ${selectedMode === '1v1' ? 'text-emerald-600' : 'text-gray-800'}`}>1 vs 1</h3>
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Battle a friend or a random opponent</p>
+                                <h3 className={`text-2xl font-black mb-1 ${selectedMode === '1v1' ? 'text-emerald-600' : 'text-gray-800'}`}>{dict.mainMenu.duelTitle}</h3>
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{dict.mainMenu.duelDesc}</p>
                             </button>
 
                             <button
@@ -275,25 +288,25 @@ export default function MainMenu() {
                                         : 'bg-white border-gray-100 hover:border-emerald-200'
                                 }`}
                             >
-                                <h3 className={`text-2xl font-black mb-1 ${selectedMode === 'BR' ? 'text-emerald-600' : 'text-gray-800'}`}>Battle Royale</h3>
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Intense survival mode up to 20 players</p>
+                                <h3 className={`text-2xl font-black mb-1 ${selectedMode === 'BR' ? 'text-emerald-600' : 'text-gray-800'}`}>{dict.mainMenu.brTitle}</h3>
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{dict.mainMenu.brDesc}</p>
                             </button>
                         </div>
 
                         {/* Action Buttons with Protection */}
                         <div className="flex flex-col sm:flex-row gap-5">
                             <button
-                                onClick={() => handleProtectedAction(`/create-room?mode=${selectedMode}`)}
+                                onClick={() => handleProtectedAction(`/${lang}/create-room?mode=${selectedMode}`)}
                                 className="flex-1 py-5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-lg uppercase tracking-[0.15em] rounded-2xl shadow-xl shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0"
                             >
-                                + Create Room
+                                {dict.mainMenu.createRoomBtn}
                             </button>
 
                             <button
-                                onClick={() => handleProtectedAction('/join-room')}
+                                onClick={() => handleProtectedAction(`/${lang}/join-room`)}
                                 className="flex-1 py-5 bg-white border-2 border-emerald-50 hover:border-emerald-200 text-emerald-600 font-black text-lg uppercase tracking-[0.15em] rounded-2xl shadow-sm transition-all transform hover:-translate-y-1 active:scale-95 active:translate-y-0"
                             >
-                                Join Room
+                                {dict.mainMenu.joinRoomBtn}
                             </button>
                         </div>
                     </div>
@@ -306,6 +319,7 @@ export default function MainMenu() {
                 onClose={() => setIsAuthModalOpen(false)}
                 onLoginSuccess={handleLoginSuccess}
                 onRegisterSuccess={handleRegisterSuccess}
+                dict={dict.auth}
             />
         </main>
     );

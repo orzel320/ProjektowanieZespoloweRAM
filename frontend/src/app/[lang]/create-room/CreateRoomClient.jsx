@@ -2,11 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 
-function CreateRoomContent() {
+function CreateRoomContent({ dict }) {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const routeParams = useParams();
+    const lang = routeParams.lang;
 
     const [user, setUser] = useState(null);
 
@@ -50,7 +52,7 @@ function CreateRoomContent() {
             difficulty,
             topic: topic.trim() || 'General',
         });
-        router.push(`/lobby/new?${params.toString()}`);
+        router.push(`/${lang}/lobby/new?${params.toString()}`);
     };
 
     return (
@@ -60,8 +62,8 @@ function CreateRoomContent() {
 
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/60 backdrop-blur-md border-b border-green-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
-                    <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
-                        <span>← Menu</span>
+                    <Link href={`/${lang}`} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                        <span>← {dict.createRoom.backMenu}</span>
                     </Link>
                     <div className="text-xl font-bold tracking-tight flex items-center gap-2">
                         <span className="text-gray-700 font-black">connections<span className="text-emerald-500">++</span></span>
@@ -74,11 +76,11 @@ function CreateRoomContent() {
             </header>
 
             <div className="flex-1 w-full max-w-4xl mx-auto px-6 py-12 md:py-16 relative z-0 flex flex-col justify-center">
-                <h2 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-12 tracking-tight text-center md:text-left">Room Settings</h2>
+                <h2 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-12 tracking-tight text-center md:text-left">{dict.createRoom.title}</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 mb-12">
                     <div className="flex flex-col gap-3">
-                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Mode</label>
+                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">{dict.createRoom.mode}</label>
                         <div className="flex gap-3 h-14">
                             {['1v1', 'Battle Royale'].map((m) => (
                                 <button
@@ -97,7 +99,7 @@ function CreateRoomContent() {
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Category (Topic)</label>
+                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">{dict.createRoom.category}</label>
                         <input
                             type="text"
                             value={topic}
@@ -108,7 +110,7 @@ function CreateRoomContent() {
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Player Limit</label>
+                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">{dict.createRoom.playerLimit}</label>
                         <input
                             type="number"
                             value={playerLimit}
@@ -119,7 +121,7 @@ function CreateRoomContent() {
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Round Time</label>
+                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">{dict.createRoom.roundTime}</label>
                         <div className="relative h-14">
                             <input
                                 type="number"
@@ -132,7 +134,7 @@ function CreateRoomContent() {
                     </div>
 
                     <div className="flex flex-col gap-3 md:col-span-2">
-                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">Difficulty</label>
+                        <label className="text-xs font-bold text-emerald-600/80 uppercase tracking-[0.15em]">{dict.createRoom.difficulty}</label>
                         <div className="flex gap-2 h-14 max-w-md">
                             {['Easy', 'Medium', 'Hard'].map((diff) => (
                                 <button
@@ -144,7 +146,7 @@ function CreateRoomContent() {
                                             : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
                                     }`}
                                 >
-                                    {diff}
+                                    {dict.createRoom.difficulties[diff]}
                                 </button>
                             ))}
                         </div>
@@ -154,12 +156,12 @@ function CreateRoomContent() {
                 <div className="w-full border-t border-dashed border-gray-300/60 my-6"></div>
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-2">
-                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Room code generated after creation</p>
+                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">{dict.createRoom.footerText}</p>
                     <button
                         onClick={handleCreate}
                         className="w-full md:w-max px-14 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white text-center font-black text-lg uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-500/20 transform hover:-translate-y-1 active:scale-95 transition-all duration-300"
                     >
-                        Create Room
+                        {dict.createRoom.createBtn}
                     </button>
                 </div>
             </div>
@@ -167,10 +169,10 @@ function CreateRoomContent() {
     );
 }
 
-export default function CreateRoomPage() {
+export default function CreateRoomPage({ dict }) {
     return (
         <Suspense fallback={<div className="min-h-screen bg-[#FAFCF8]"></div>}>
-            <CreateRoomContent />
+            <CreateRoomContent dict={dict} />
         </Suspense>
     );
 }

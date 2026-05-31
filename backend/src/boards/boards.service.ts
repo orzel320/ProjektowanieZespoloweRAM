@@ -8,7 +8,7 @@ import {
 export class BoardsService {
   private readonly timeoutMs = 120_000;
 
-  async generate(topic: string, difficulty: string): Promise<unknown> {
+  async generate(topic: string, difficulty: string, language: string): Promise<unknown> {
     const baseUrl = process.env.AI_SERVICE_URL?.replace(/\/$/, '');
     if (!baseUrl) {
       throw new HttpException(
@@ -26,7 +26,7 @@ export class BoardsService {
         res = await fetch(`${baseUrl}/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, difficulty }),
+          body: JSON.stringify({ topic, difficulty, language }),
           signal: controller.signal,
         });
       } catch (err) {

@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 
-export default function LobbyPage() {
+export default function LobbyPage({ dict, initialRoomId }) {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
+    const lang = params.lang;
 
-    const initialRoomId = params?.roomId;
+    // const initialRoomId = params?.roomId;
     const isCreating = searchParams.get('create') === '1';
 
     const [user, setUser] = useState(null);
@@ -36,7 +37,7 @@ export default function LobbyPage() {
             socket.on('lobby:room_created', (r) => {
                 updateRoom(r);
                 if (typeof window !== 'undefined') {
-                    const nextUrl = `/lobby/${r.roomId}?mode=${r.config.mode}`;
+                    const nextUrl = `/${lang}/lobby/${r.roomId}?mode=${r.config.mode}`;
                     window.history.replaceState(null, '', nextUrl);
                 }
             });
@@ -44,7 +45,7 @@ export default function LobbyPage() {
             socket.on('lobby:room_updated', updateRoom);
 
             socket.on('lobby:room_deleted', () => {
-                if (!gameStartedRef.current) router.push('/');
+                if (!gameStartedRef.current) router.push(`/${lang}`);
             });
 
             socket.on('lobby:game_started', ({ roomId, sessionId }) => {
@@ -52,7 +53,7 @@ export default function LobbyPage() {
                 const r = roomRef.current;
                 const expected = r?.players?.length ?? 2;
                 const isHost = !!r?.players?.find((p) => p.userId === u.id)?.isHost;
-                router.push(`/play/${roomId}?sessionId=${sessionId}&expected=${expected}&host=${isHost ? 1 : 0}`);
+                router.push(`/${lang}/play/${roomId}?sessionId=${sessionId}&expected=${expected}&host=${isHost ? 1 : 0}`);
             });
 
             socket.on('lobby:error', ({ message }) => setError(message));
@@ -67,6 +68,7 @@ export default function LobbyPage() {
                         roundDurationMs: Number(searchParams.get('roundDurationMs')) || 60000,
                         difficulty: searchParams.get('difficulty') || 'Medium',
                         topic: searchParams.get('topic') || 'General',
+                        language: lang
                     });
                 } else {
                     socket.emit('lobby:join_room', {
@@ -83,7 +85,7 @@ export default function LobbyPage() {
                 const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
                 const data = await res.json();
                 if (!data.authenticated) {
-                    router.push('/');
+                    router.push(`/${lang}`);
                     return;
                 }
                 if (cancelled) return;
@@ -91,7 +93,7 @@ export default function LobbyPage() {
                 connect(data.user);
             } catch (e) {
                 console.error(e);
-                router.push('/');
+                router.push(`/${lang}`);
             }
         };
 
@@ -115,6 +117,7 @@ export default function LobbyPage() {
     const isHost = myPlayer?.isHost ?? false;
     const displayRoomId = room?.roomId ?? (isCreating ? '...' : initialRoomId);
     const canStart = isHost && players.length >= 2;
+    const rawDifficulty = room?.config?.difficulty || searchParams.get('difficulty') || 'Medium';
 
     const handleCopyCode = () => {
         if (!room?.roomId) return;
@@ -129,7 +132,7 @@ export default function LobbyPage() {
     };
 
     const handleLeave = () => {
-        router.push('/');
+        router.push(`/${lang}`);
     };
 
     return (
@@ -140,14 +143,14 @@ export default function LobbyPage() {
             <header className="w-full flex items-center justify-between px-8 py-5 bg-white/50 backdrop-blur-xl border-b border-emerald-100/50 sticky top-0 z-10">
                 <div className="flex items-center gap-6">
                     <button onClick={handleLeave} className="text-gray-400 hover:text-emerald-500 transition-colors font-bold tracking-widest text-[11px] uppercase">
-                        ← Menu
+                        ← {dict.lobby.backMenu}
                     </button>
                     <div className="text-xl font-bold tracking-tight">
                         <span className="text-gray-800 font-black">connections<span className="text-emerald-500 font-black">++</span></span>
                     </div>
                 </div>
                 <div className="text-[10px] font-black text-emerald-600 bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-emerald-50 uppercase tracking-[0.2em]">
-                    @{user?.username || 'guest'}
+                    @{user?.username || dict.lobby.guest}
                 </div>
             </header>
 
@@ -157,12 +160,12 @@ export default function LobbyPage() {
                     <div className="flex justify-between items-end mb-10">
                         <div>
                             <h2 className="text-3xl font-black text-gray-800 tracking-tight">
-                                Players <span className="text-emerald-500/40 ml-1">{players.length}/{maxPlayers}</span>
+                                {dict.lobby.players} <span className="text-emerald-500/40 ml-1">{players.length}/{maxPlayers}</span>
                             </h2>
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shadow-sm">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <span className="text-[11px] font-black uppercase tracking-widest">Waiting...</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest">{dict.lobby.waiting}</span>
                         </div>
                     </div>
 
@@ -196,7 +199,7 @@ export default function LobbyPage() {
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="font-bold text-gray-800 text-base tracking-tight">{p.username}</span>
-                                            {p.isHost && <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Host</span>}
+                                            {p.isHost && <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{dict.lobby.host}</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -206,29 +209,29 @@ export default function LobbyPage() {
 
                     <div className="mt-16 flex flex-wrap gap-8 md:gap-12 border-t border-emerald-50 pt-8">
                         <div>
-                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Game Mode</p>
-                            <p className="text-base font-black text-gray-700">{mode === 'BR' ? 'Battle Royale' : '1 vs 1 Duel'}</p>
+                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">{dict.lobby.gameMode}</p>
+                            <p className="text-base font-black text-gray-700">{mode === 'BR' ? dict.lobby.battleRoyale : dict.lobby.duel}</p>
                         </div>
                         {roundTimeSec !== null && (
                             <div>
-                                <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Round Time</p>
-                                <p className="text-base font-black text-gray-700">{roundTimeSec} seconds</p>
+                                <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">{dict.lobby.roundTime}</p>
+                                <p className="text-base font-black text-gray-700">{roundTimeSec} {dict.lobby.seconds}</p>
                             </div>
                         )}
                         <div>
-                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Category</p>
+                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">{dict.lobby.category}</p>
                             <p className="text-base font-black text-gray-700">{room?.config?.topic || searchParams.get('topic') || 'General'}</p>
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">Difficulty</p>
-                            <p className="text-base font-black text-gray-700">{room?.config?.difficulty || searchParams.get('difficulty') || 'Medium'}</p>
+                            <p className="text-[10px] font-black text-emerald-600/40 uppercase tracking-[0.2em] mb-2">{dict.lobby.difficulty}</p>
+                            <p className="text-base font-black text-gray-700">{dict.lobby.difficulties[rawDifficulty] || rawDifficulty}</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="w-full md:w-[400px] p-8 md:p-12 flex flex-col justify-start bg-white/20">
                     <div className="mb-14">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4">Invite Link</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4">{dict.lobby.inviteLink}</p>
                         <div className="bg-white border-2 border-emerald-50 rounded-3xl p-8 shadow-sm flex flex-col items-center gap-6 group hover:border-emerald-200 transition-all">
                             <span className="text-4xl font-black text-gray-800 tracking-[0.25em] text-center">{displayRoomId}</span>
                             <button
@@ -238,7 +241,7 @@ export default function LobbyPage() {
                                     copied ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-gray-900 text-white hover:bg-black disabled:opacity-40'
                                 }`}
                             >
-                                {copied ? 'Copied to clipboard' : 'Copy Code'}
+                                {copied ? dict.lobby.copied : dict.lobby.copyCode}
                             </button>
                         </div>
                     </div>
@@ -253,19 +256,19 @@ export default function LobbyPage() {
                                     : 'bg-slate-200 text-slate-400 shadow-none cursor-not-allowed'
                             }`}
                         >
-                            Start Game
+                            {dict.lobby.startGame}
                         </button>
                         <button
                             onClick={handleLeave}
                             className="w-full py-4 bg-white border-2 border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50/30 transition-all text-xs font-black uppercase tracking-[0.2em] rounded-xl"
                         >
-                            Leave Room
+                            {dict.lobby.leaveRoom}
                         </button>
                     </div>
                     <p className="text-[10px] text-gray-400 font-medium italic mt-8 text-center px-4">
                         {isHost
-                            ? 'The game will start for all players once you press the green button.'
-                            : 'Waiting for the host to start the game.'}
+                            ? dict.lobby.hostNote
+                            : dict.lobby.playerNote}
                     </p>
                 </div>
             </div>

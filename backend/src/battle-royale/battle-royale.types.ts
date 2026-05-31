@@ -25,6 +25,7 @@ export interface BRSession {
 
   topic: string;
   difficulty: string;
+  language?: string;
 
   status: BRSessionStatus;
   currentRound: number;
@@ -70,6 +71,7 @@ export interface BRSessionConfig {
   roomId: string;
   topic?: string;
   difficulty?: string;
+  language?: string;
   maxRounds?: number;
   roundDurationMs?: number;
   cooldownMs?: number;

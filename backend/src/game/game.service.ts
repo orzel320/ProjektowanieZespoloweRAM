@@ -19,8 +19,8 @@ export class GameService {
     private readonly boardsService: BoardsService,
   ) {}
 
-  async generate(topic: string, difficulty: string) {
-    const raw = await this.boardsService.generate(topic, difficulty);
+  async generate(topic: string, difficulty: string, language: string) {
+    const raw = await this.boardsService.generate(topic, difficulty, language);
     const board = this.parseAndValidateBoard(raw);
     const gridOrder = this.shuffle(board.categories.flatMap((c) => c.words));
     const game = this.gamesRepository.create({
