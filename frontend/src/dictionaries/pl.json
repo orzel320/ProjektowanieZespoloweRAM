@@ -43,6 +43,11 @@
     "playerLimit": "Limit Graczy",
     "roundTime": "Czas Rundy",
     "difficulty": "Trudność",
+    "difficulties": {
+      "Easy": "Łatwy",
+      "Medium": "Średni",
+      "Hard": "Trudny"
+    },
     "footerText": "Kod pokoju zostanie wygenerowany po utworzeniu",
     "createBtn": "Stwórz Pokój"
   },

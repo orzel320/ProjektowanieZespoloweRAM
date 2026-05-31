@@ -42,7 +42,12 @@
     "categoryPlaceholder": "e.g. Movies, Space, General",
     "playerLimit": "Player Limit",
     "roundTime": "Round Time",
-    "difficulty": "Difficulty",
+    "difficultyLabel": "Difficulty",
+    "difficulties": {
+      "Easy": "Easy",
+      "Medium": "Medium",
+      "Hard": "Hard"
+    },
     "footerText": "Room code generated after creation",
     "createBtn": "Create Room"
   },

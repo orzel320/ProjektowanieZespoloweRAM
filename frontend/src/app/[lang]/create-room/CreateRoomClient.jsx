@@ -146,7 +146,7 @@ function CreateRoomContent({ dict }) {
                                             : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
                                     }`}
                                 >
-                                    {diff}
+                                    {dict.createRoom.difficulties[diff]}
                                 </button>
                             ))}
                         </div>
@@ -169,7 +169,7 @@ function CreateRoomContent({ dict }) {
     );
 }
 
-export default function CreateRoomPage() {
+export default function CreateRoomPage({ dict }) {
     return (
         <Suspense fallback={<div className="min-h-screen bg-[#FAFCF8]"></div>}>
             <CreateRoomContent dict={dict} />
