@@ -9,6 +9,7 @@ import {
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GenerateGameDto } from './dto/generate-game.dto';
 import { GuessDto } from './dto/guess.dto';
+import { HintDto } from './dto/hint.dto';
 import { GameService } from './game.service';
 
 @ApiTags('game')
@@ -29,6 +30,15 @@ export class GameController {
     @Body() body: GuessDto,
   ) {
     return this.gameService.guess(gameId, body.words);
+  }
+
+  @Post(':gameId/hint')
+  @ApiBody({ type: HintDto })
+  async hint(
+    @Param('gameId', ParseUUIDPipe) gameId: string,
+    @Body() body: HintDto,
+  ) {
+    return this.gameService.hint(gameId, body.type);
   }
 
   @Get(':gameId')

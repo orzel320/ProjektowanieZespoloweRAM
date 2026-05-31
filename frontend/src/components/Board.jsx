@@ -64,20 +64,34 @@ export default function GameGrid({
     };
 
     const handleHintRequest = async (type) => {
+        if (!gameId) return;
         setIsHintModalOpen(false);
         setHintUsed(true);
 
-        // MOCK: Symulacja zapytania POST /game/:gameId/hint
-        if (type === 'words') {
-            // Wybieramy 2 pierwsze słowa z dostępnych (Mock)
-            if (displayWords.length >= 2) {
-                setHintWords([displayWords[0].id, displayWords[1].id]);
+        try {
+            const response = await fetch(`http://localhost:3001/game/${gameId}/hint`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type })
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch hint");
+
+            const data = await response.json();
+
+            if (data.type === 'pair') {
+                const ids = displayWords
+                    .filter(w => data.words.includes(w.text))
+                    .map(w => w.id);
+                setHintWords(ids);
                 setTimeout(() => setHintWords([]), 6000); // Czyści podświetlenie po 6s
+            } else if (data.type === 'category') {
+                setHintCategory(data.categoryName);
+                setTimeout(() => setHintCategory(null), 6000);
             }
-        } else if (type === 'category') {
-            // Mockujemy nazwę kategorii
-            setHintCategory("MYSTERY CATEGORY (MOCK)");
-            setTimeout(() => setHintCategory(null), 6000);
+        } catch (error) {
+            console.error("Error fetching hint:", error);
+            setHintUsed(false);
         }
     };
 
@@ -417,7 +431,7 @@ export default function GameGrid({
                         <p className="text-xs font-bold text-emerald-500 mb-6 uppercase tracking-widest">{dict.board.hintSubtitle}</p>
 
                         <div className="flex flex-col gap-4">
-                            <button onClick={() => handleHintRequest('words')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
+                            <button onClick={() => handleHintRequest('pair')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
                                 {dict.board.hintOption1}
                             </button>
                             <button onClick={() => handleHintRequest('category')} className="w-full py-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200 shadow-sm active:scale-95">

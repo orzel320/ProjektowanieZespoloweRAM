@@ -145,7 +145,7 @@ describe('BattleRoyaleService', () => {
       const session = await setupSession();
       await service.startNextRound(session.sessionId, 'Animals', 'hard');
 
-      expect(mockBoardsService.generate).toHaveBeenCalledWith('Animals', 'hard');
+      expect(mockBoardsService.generate).toHaveBeenCalledWith('Animals', 'hard', 'en');
     });
 
     it('should reset per-round scores for all active players', async () => {

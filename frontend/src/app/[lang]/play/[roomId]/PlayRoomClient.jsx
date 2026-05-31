@@ -35,6 +35,11 @@ export default function PlayRoomPage({ dict }) {
     const [hintCategory, setHintCategory] = useState(null);
 
     const socketRef = useRef(null);
+    const displayWordsRef = useRef([]);
+
+    useEffect(() => {
+        displayWordsRef.current = displayWords;
+    }, [displayWords]);
 
     useEffect(() => {
         const i = setInterval(() => setNow(Date.now()), 200);
@@ -97,6 +102,21 @@ export default function PlayRoomPage({ dict }) {
                 } else if (res.cooldownMs > 0) {
                     setCooldownUntil(Date.now() + res.cooldownMs);
                     setSelectedIds([]);
+                }
+            });
+
+            socket.on('br:hint_result', (data) => {
+                if (data.cooldownMs > 0) setCooldownUntil(Date.now() + data.cooldownMs);
+
+                if (data.type === 'pair') {
+                    const ids = displayWordsRef.current
+                        .filter((w) => data.words.includes(w.text))
+                        .map((w) => w.id);
+                    setHintWords(ids);
+                    setTimeout(() => setHintWords([]), 8000);
+                } else if (data.type === 'category') {
+                    setHintCategory(data.categoryName);
+                    setTimeout(() => setHintCategory(null), 8000);
                 }
             });
 
@@ -197,23 +217,13 @@ export default function PlayRoomPage({ dict }) {
 
     const handleHintRequest = (type) => {
         setIsHintModalOpen(false);
-        // Nałożenie wizualnej kary - blokuje siatkę i zgadywanie na 20 sekund
-        setCooldownUntil(Date.now() + 20000);
         setSelectedIds([]);
 
-        // Mock: Symulacja odpowiedzi z br:hint_result
-        if (type === 'words') {
-            const availableCats = [...new Set(displayWords.map(w => w.categoryIdx))];
-            if (availableCats.length > 0) {
-                const targetCat = availableCats[0];
-                const matching = displayWords.filter(w => w.categoryIdx === targetCat).slice(0, 2);
-                setHintWords(matching.map(w => w.id));
-                setTimeout(() => setHintWords([]), 8000);
-            }
-        } else if (type === 'category') {
-            setHintCategory("MYSTERY CATEGORY (MOCK)");
-            setTimeout(() => setHintCategory(null), 8000);
-        }
+        socketRef.current?.emit('br:hint', {
+            sessionId,
+            userId: user?.id,
+            type,
+        });
     };
 
     const formatMs = (ms) => {
@@ -417,7 +427,7 @@ export default function PlayRoomPage({ dict }) {
                         <p className="text-xs font-bold text-red-500 mb-6 uppercase tracking-widest">{dict.playRoom.hintWarning}</p>
 
                         <div className="flex flex-col gap-4">
-                            <button onClick={() => handleHintRequest('words')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
+                            <button onClick={() => handleHintRequest('pair')} className="w-full py-4 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl transition-colors border border-purple-200 shadow-sm active:scale-95">
                                 {dict.playRoom.hintOption1}
                             </button>
                             <button onClick={() => handleHintRequest('category')} className="w-full py-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200 shadow-sm active:scale-95">

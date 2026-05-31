@@ -30,6 +30,7 @@ function makeGame(overrides: Partial<Game> = {}): Game {
     solvedCategoryIndices: [],
     mistakes: 0,
     guessCount: 0,
+    hintUsed: false,
     startedAt: new Date('2024-01-01T10:00:00Z'),
     finishedAt: null,
     ...overrides,
@@ -72,9 +73,9 @@ describe('GameService', () => {
       mockGamesRepository.create.mockReturnValue(savedGame);
       mockGamesRepository.save.mockResolvedValue(savedGame);
 
-      const result = await service.generate('Animals', 'easy');
+      const result = await service.generate('Animals', 'easy', 'en');
 
-      expect(mockBoardsService.generate).toHaveBeenCalledWith('Animals', 'easy');
+      expect(mockBoardsService.generate).toHaveBeenCalledWith('Animals', 'easy', 'en');
       expect(mockGamesRepository.save).toHaveBeenCalled();
       expect(result).toHaveProperty('gameId');
       expect(result).toHaveProperty('grid');
@@ -89,7 +90,7 @@ describe('GameService', () => {
         categories: [{ name: 'Only one', words: ['A', 'B', 'C', 'D'], logic: 'x' }],
       });
 
-      await expect(service.generate('Test', 'easy')).rejects.toThrow(BadRequestException);
+      await expect(service.generate('Test', 'easy', 'en')).rejects.toThrow(BadRequestException);
     });
 
     it('should throw when a category has wrong number of words', async () => {
@@ -97,7 +98,7 @@ describe('GameService', () => {
       board.categories[0].words = ['LION', 'TIGER']; 
       mockBoardsService.generate.mockResolvedValue(board);
 
-      await expect(service.generate('Animals', 'easy')).rejects.toThrow(BadRequestException);
+      await expect(service.generate('Animals', 'easy', 'en')).rejects.toThrow(BadRequestException);
     });
 
     it('should throw when there are duplicate words across categories', async () => {
@@ -105,7 +106,7 @@ describe('GameService', () => {
       board.categories[1].words[0] = 'LION'; 
       mockBoardsService.generate.mockResolvedValue(board);
 
-      await expect(service.generate('Animals', 'easy')).rejects.toThrow(BadRequestException);
+      await expect(service.generate('Animals', 'easy', 'en')).rejects.toThrow(BadRequestException);
     });
 
     it('should shuffle the grid (not always in original order)', async () => {
@@ -117,7 +118,7 @@ describe('GameService', () => {
       mockGamesRepository.create.mockReturnValue(savedGame);
       mockGamesRepository.save.mockResolvedValue(savedGame);
 
-      const result = await service.generate('Animals', 'easy');
+      const result = await service.generate('Animals', 'easy', 'en');
 
       expect(result.grid.slice().sort()).toEqual(originalOrder.slice().sort());
     });
@@ -262,6 +263,81 @@ describe('GameService', () => {
       const result = await service.guess('test-uuid', ['LION', 'TIGER', 'PUMA', 'CHEETAH']) as any;
 
       expect(result.correct).toBe(false);
+    });
+  });
+
+  describe('hint', () => {
+    it('should return two words from an unsolved category for type "pair"', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.hint('test-uuid', 'pair') as any;
+
+      expect(result.type).toBe('pair');
+      expect(result.words).toEqual(['LION', 'TIGER']);
+      expect(result.categoryName).toBeUndefined();
+    });
+
+    it('should return a category name for type "category"', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.hint('test-uuid', 'category') as any;
+
+      expect(result.type).toBe('category');
+      expect(result.categoryName).toBe('Cats');
+      expect(result.words).toBeUndefined();
+    });
+
+    it('should skip already-solved categories', async () => {
+      const game = makeGame({ solvedCategoryIndices: [0] });
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.hint('test-uuid', 'category') as any;
+
+      expect(result.categoryName).toBe('Dogs');
+    });
+
+    it('should mark hintUsed and persist it', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      await service.hint('test-uuid', 'pair');
+
+      expect(game.hintUsed).toBe(true);
+      expect(mockGamesRepository.save).toHaveBeenCalledWith(game);
+    });
+
+    it('should reject a second hint in the same game', async () => {
+      const game = makeGame({ hintUsed: true });
+      mockGamesRepository.findOne.mockResolvedValue(game);
+
+      await expect(service.hint('test-uuid', 'pair')).rejects.toThrow(BadRequestException);
+      expect(mockGamesRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should reject a hint when the game has already ended', async () => {
+      const game = makeGame({ status: 'won', solvedCategoryIndices: [0, 1, 2, 3] });
+      mockGamesRepository.findOne.mockResolvedValue(game);
+
+      await expect(service.hint('test-uuid', 'pair')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject an invalid hint type', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+
+      await expect(service.hint('test-uuid', 'words' as any)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException for an unknown gameId', async () => {
+      mockGamesRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.hint('nonexistent', 'pair')).rejects.toThrow(NotFoundException);
     });
   });
 });
