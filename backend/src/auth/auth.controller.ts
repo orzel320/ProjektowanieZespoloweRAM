@@ -1,72 +1,44 @@
-import { Injectable, Scope, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { User } from '../user/user.entity';
-//requests
-import { REQUEST } from '@nestjs/core';
-import type { Request } from 'express';
+import { Controller, Post, Body, Session, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { AuthService } from './auth.service';
 
-@Injectable({ scope: Scope.REQUEST })
-export class AuthService {
-  constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-    @Inject(REQUEST)
-    private readonly request: Request,
-  ) {}
+@ApiTags('auth')
+@Controller('auth')
+export class AuthController {
+  constructor(private authService: AuthService) {}
 
-  getUserId(): string | null {
-    return (this.request as any).user?.id || null;
+  @Post('register')
+  async register(@Body() body: { username: string; password: string }) {
+    return this.authService.register(body.username, body.password);
   }
 
-  async register(
-    username: string,
-    password: string,
-  ): Promise<{ success: boolean; error?: string }> {
-    const exists = await this.usersRepository.exists({
-      where: { username },
-    });
-    if (exists) {
-      return { success: false, error: 'Username already exists' };
+  @Post('login')
+  async login(@Body() body: { username: string; password: string }, @Session() session: any) {
+    const result = await this.authService.login(body.username, body.password);
+
+    if (result.success && result.user) {
+      // Store user in session (server-side, automatically sends cookie)
+      session.userId = result.user.id;
+      session.username = result.user.username;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await this.usersRepository.save(
-      this.usersRepository.create({
-        username,
-        passwordHash: hashedPassword,
-      }),
-    );
+    return result;
+  }
+
+  @Post('logout')
+  async logout(@Session() session: any) {
+    session.destroy();
     return { success: true };
   }
 
-  async login(
-    username: string,
-    password: string,
-  ): Promise<{
-    success: boolean;
-    user?: { id: string; username: string; createdAt: Date };
-    error?: string;
-  }> {
-    const user = await this.usersRepository.findOne({ where: { username } });
-
-    if (!user) {
-      return { success: false, error: 'User not found' };
+  @Get('me')
+  async getMe(@Session() session: any) {
+    if (!session.userId) {
+      return { authenticated: false };
     }
-
-    const passwordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!passwordValid) {
-      return { success: false, error: 'Invalid password' };
-    }
-
     return {
-      success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        createdAt: user.createdAt,
-      },
+      authenticated: true,
+      user: { id: session.userId, username: session.username }
     };
   }
 }
