@@ -1,29 +1,15 @@
-import { Injectable, Scope, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../user/user.entity';
-//requests
-import { REQUEST } from '@nestjs/core';
-import type { Request } from 'express';
 
-//this part modified
-//------------------------------------
-
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @Inject(REQUEST)
-    private readonly request: Request,
   ) {}
-
-  getUserId(): string | null {
-    return (this.request as any).user?.id || null;
-  }
-
-//------------------------------------
 
   async register(
     username: string,
