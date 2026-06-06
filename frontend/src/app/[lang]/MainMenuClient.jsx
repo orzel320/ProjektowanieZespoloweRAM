@@ -70,6 +70,8 @@ export default function MainMenuClient({ dict }) {
     const [user, setUser] = useState(null);
     const [showAuthError, setShowAuthError] = useState(false);
     const [showStats, setShowStats] = useState(false);
+    const [stats, setStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(false);
     const [selectedMode, setSelectedMode] = useState('BR');
 
     const popupRef = useRef(null);
@@ -139,8 +141,28 @@ export default function MainMenuClient({ dict }) {
         }
     };
 
+    const handleShowStats = async () => {
+        setShowStats(true);
+        setStatsLoading(true);
+        try {
+            const response = await fetch("http://localhost:3001/stats/me", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            const data = await response.json();
+            setStats(data.statistics ?? null);
+        } catch (error) {
+            console.error("Error fetching stats:", error);
+            setStats(null);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
     const handleLogout = () => {
         setUser(null);
+        setStats(null);
         localStorage.removeItem('user');
     };
 
@@ -184,7 +206,7 @@ export default function MainMenuClient({ dict }) {
                     {user ? (
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => {setShowStats(true)}}
+                                onClick={handleShowStats}
                                 className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-gray-900/10 active:scale-95"
                             >
                                 {dict.mainMenu.stats}
@@ -207,10 +229,42 @@ export default function MainMenuClient({ dict }) {
                                         : "-translate-y-12 opacity-0 pointer-events-none"
                                 }`}
                             >
-                                <div className="bg-white border-2 border-emerald-400 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
-                                    <p className="font-black text-gray-800 uppercase tracking-widest text-xs">
+                                <div className="bg-white border-2 border-emerald-400 px-8 py-6 rounded-2xl shadow-2xl min-w-[320px]">
+                                    <p className="font-black text-gray-800 uppercase tracking-widest text-xs mb-4 text-center">
                                         {dict.mainMenu.statsText}
                                     </p>
+                                    {statsLoading ? (
+                                        <p className="text-gray-400 text-xs font-bold text-center py-4">
+                                            {dict.mainMenu.statsLoading}
+                                        </p>
+                                    ) : stats ? (
+                                        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                                            {[
+                                                ['gamesPlayed', stats.gamesPlayed],
+                                                ['gamesWon', stats.gamesWon],
+                                                ['gamesLost', stats.gamesLost],
+                                                ['winRate', stats.gamesPlayed > 0
+                                                    ? `${Math.round((stats.gamesWon / stats.gamesPlayed) * 100)}%`
+                                                    : '0%'],
+                                                ['currentStreak', stats.currentStreak],
+                                                ['bestStreak', stats.bestStreak],
+                                                ['totalGuesses', stats.totalGuesses],
+                                                ['totalMistakes', stats.totalMistakes],
+                                                ['loginCount', stats.loginCount ?? 0],
+                                            ].map(([key, value]) => (
+                                                <div key={key} className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-widest">
+                                                        {dict.mainMenu.statsLabels[key]}
+                                                    </span>
+                                                    <span className="text-lg font-black text-gray-800">{value}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-400 text-xs font-bold text-center py-4">
+                                            {dict.mainMenu.statsEmpty}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

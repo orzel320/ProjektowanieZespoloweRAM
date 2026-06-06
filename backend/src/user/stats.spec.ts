@@ -40,7 +40,6 @@ describe('Statistics Module', () => {
           provide: getRepositoryToken(Stats),
           useValue: mockStatsRepository,
         },
-        AuthService,
         {
           provide: AuthService,
           useValue: mockAuthService,
@@ -72,6 +71,7 @@ describe('Statistics Module', () => {
       const result = await service.getUserStatistics(TEST_USER_ID);
 
       expect(result).toEqual({
+        loginCount: 0,
         gamesPlayed: 25,
         gamesWon: 18,
         gamesLost: 7,
@@ -91,6 +91,7 @@ describe('Statistics Module', () => {
       const result = await service.getUserStatistics(TEST_USER_ID);
 
       expect(result).toEqual({
+        loginCount: 0,
         gamesPlayed: 0,
         gamesWon: 0,
         gamesLost: 0,
@@ -145,8 +146,6 @@ describe('Statistics Module', () => {
       mockStatsRepository.save.mockImplementation(async (s) => s); 
 
       const result = await service.updateStatistics(game, newUserId);
-      console.log(result);
-
 
       expect(result.totalGuesses).toBe(10);
       expect(result.gamesPlayed).toBe(1);

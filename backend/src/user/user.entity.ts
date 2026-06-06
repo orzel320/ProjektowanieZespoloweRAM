@@ -3,8 +3,6 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  JoinColumn,
-  OneToOne
 } from 'typeorm';
 
 @Entity({ name: 'users' })
@@ -21,4 +19,3 @@ export class User {
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }
-

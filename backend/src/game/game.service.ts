@@ -98,13 +98,9 @@ export class GameService {
 
     if (matchedIndex !== null) {
       const nextSolved = [...game.solvedCategoryIndices, matchedIndex].sort(
-
         (a, b) => a - b,
-
       );
-
       game.solvedCategoryIndices = nextSolved;
-
       if (nextSolved.length === 4) {
         game.status = 'won';
         game.finishedAt = new Date();
@@ -119,10 +115,13 @@ export class GameService {
 
     await this.gamesRepository.save(game);
 
-    // Update statistics if game just ended and user is authenticated
     const userId = game.userId;
     if (previousStatus === 'in_progress' && game.status !== 'in_progress' && userId) {
-      await this.statsService.updateStatistics(game, userId);
+      try {
+        await this.statsService.updateStatistics(game, userId);
+      } catch (error) {
+        console.error('Failed to update statistics:', error);
+      }
     }
 
     const updated = this.toPublicState(game);

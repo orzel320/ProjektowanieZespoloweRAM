@@ -1,7 +1,7 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -10,7 +10,8 @@ export class Stats {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'user_id' })
+  @Index({ unique: true })
+  @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
   @Column({ name: 'login_count', default: 0 })
