@@ -213,6 +213,7 @@ export class BattleRoyaleService {
     cooldownMs: number;
     categoryName?: string;
     categoryIndex?: number;
+    isOneAway?: boolean;
     leaderboard: BRLeaderboardEntry[];
     allCategoriesSolved: boolean;
   } {
@@ -281,10 +282,24 @@ export class BattleRoyaleService {
         allCategoriesSolved: allSolved,
       };
     } else {
+      let isOneAway = false;
+      const guessSet = new Set(normalized);
+      for (let i = 0; i < board.categories.length; i++) {
+        if (alreadySolved.has(i)) continue;
+        const matches = board.categories[i].words.filter((w) =>
+          guessSet.has(w.toUpperCase()),
+        ).length;
+        if (matches === 3) {
+          isOneAway = true;
+          break;
+        }
+      }
+
       player.cooldownUntil = new Date(now.getTime() + session.cooldownMs);
       return {
         correct: false,
         cooldownMs: session.cooldownMs,
+        isOneAway,
         leaderboard: this.toLeaderboard(session),
         allCategoriesSolved: false,
       };
@@ -355,7 +370,6 @@ export class BattleRoyaleService {
   }
 
   toLeaderboard(session: BRSession): BRLeaderboardEntry[] {
-    const now = new Date();
     const active = [...session.players.values()].sort((a, b) => {
       if (a.isEliminated !== b.isEliminated) return a.isEliminated ? 1 : -1;
       if (b.score !== a.score) return b.score - a.score;

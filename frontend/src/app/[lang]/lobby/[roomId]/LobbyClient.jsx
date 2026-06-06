@@ -34,7 +34,10 @@ export default function LobbyPage({ dict, initialRoomId }) {
             const socket = io('http://localhost:3001/lobby');
             socketRef.current = socket;
 
+            let myRoomId = isCreating ? null : initialRoomId;
+
             socket.on('lobby:room_created', (r) => {
+                myRoomId = r.roomId;
                 updateRoom(r);
                 if (typeof window !== 'undefined') {
                     const nextUrl = `/${lang}/lobby/${r.roomId}?mode=${r.config.mode}`;
@@ -44,8 +47,10 @@ export default function LobbyPage({ dict, initialRoomId }) {
 
             socket.on('lobby:room_updated', updateRoom);
 
-            socket.on('lobby:room_deleted', () => {
-                if (!gameStartedRef.current) router.push(`/${lang}`);
+            socket.on('lobby:room_deleted', ({ roomId }) => {
+                if (gameStartedRef.current) return;
+                if (!myRoomId || roomId !== myRoomId) return;
+                router.push(`/${lang}`);
             });
 
             socket.on('lobby:game_started', ({ roomId, sessionId }) => {
