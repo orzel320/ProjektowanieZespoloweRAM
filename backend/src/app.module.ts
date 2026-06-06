@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { BattleRoyaleModule } from './battle-royale/battle-royale.module';
 import { GameModule } from './game/game.module';
 import { LobbyModule } from './lobby/lobby.module';
+import { UserModule } from './user/user.module'; 
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { LobbyModule } from './lobby/lobby.module';
     GameModule,
     LobbyModule,
     BattleRoyaleModule,
+    UserModule,
   ],
 })
 export class AppModule {}

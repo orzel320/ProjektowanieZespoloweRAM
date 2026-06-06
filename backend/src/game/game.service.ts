@@ -6,8 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BoardsService } from '../boards/boards.service';
-import { StatsService } from '../user/stats.service';
-import { AuthService } from '../auth/auth.service';
+import { StatsService } from '../user/stats.service'; 
 import { Game } from './game.entity';
 import type { BoardPayload, CategoryPayload, GameStatusValue, HintType } from './game.types';
 
@@ -18,12 +17,11 @@ export class GameService {
   constructor(
     @InjectRepository(Game)
     private readonly gamesRepository: Repository<Game>,
-    private readonly authService: AuthService,  //for getting logged user id
     private readonly statsService: StatsService,
     private readonly boardsService: BoardsService,
   ) {}
 
-  async generate(topic: string, difficulty: string, language: string) {
+  async generate(topic: string, difficulty: string, language: string, userId?:string) { 
     const raw = await this.boardsService.generate(topic, difficulty, language);
     const board = this.parseAndValidateBoard(raw);
     const gridOrder = this.shuffle(board.categories.flatMap((c) => c.words));
@@ -36,6 +34,7 @@ export class GameService {
       guessCount: 0,
       hintUsed: false,
       finishedAt: null,
+      userId: userId || null , 
     });
     const saved = await this.gamesRepository.save(game);
     return { gameId: saved.id, grid: saved.gridOrder };
@@ -121,7 +120,7 @@ export class GameService {
     await this.gamesRepository.save(game);
 
     // Update statistics if game just ended and user is authenticated
-    const userId = this.authService.getUserId();
+    const userId = game.userId;
     if (previousStatus === 'in_progress' && game.status !== 'in_progress' && userId) {
       await this.statsService.updateStatistics(game, userId);
     }

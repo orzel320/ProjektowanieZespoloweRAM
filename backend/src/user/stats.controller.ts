@@ -1,6 +1,5 @@
-import { ApiTags } from '@nestjs/swagger'; //idk how to use it
-import { Controller, Get, Req } from '@nestjs/common';
-import type { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger'; 
+import { Controller, Get, Session } from '@nestjs/common'; 
 import { StatsService } from './stats.service';
 
 @ApiTags('stats')
@@ -9,9 +8,9 @@ export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('me')
-  async getMyStatistics(@Req() req: Request) {
-    // Extract user ID from request (adjust based on your auth setup)
-    const userId = (req as any).user?.id;
+  async getMyStatistics(@Session() session: any) { 
+
+    const userId = session?.userId; 
     
     if (!userId) {
       return {

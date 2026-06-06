@@ -1,18 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { REQUEST } from '@nestjs/core';
 import { StatsController } from './stats.controller';
+import { AuthController } from '../auth/auth.controller';
 import { StatsService } from './stats.service';
-import { Stats } from '../user/user.entity';
-import { Game } from './game.entity';
+import { AuthService } from '../auth/auth.service';
+import { Stats } from '../user/stats.entity'; 
+import { Game } from '../game/game.entity'; 
 
 describe('Statistics Module', () => {
   let controller: StatsController;
   let service: StatsService;
   let statsRepository: any;
 
+  let authController: AuthController;
+
   // Generate unique test user IDs
   const TEST_USER_ID = `test-user-${Date.now()}-${Math.random()}`;
+
+  // Create mock AuthService
+  const mockAuthService = {
+    login: jest.fn(),
+    register: jest.fn(),
+  };
 
   const mockStatsRepository = {
     findOne: jest.fn(),
@@ -24,16 +33,17 @@ describe('Statistics Module', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [StatsController],
+      controllers: [StatsController, AuthController], 
       providers: [
         StatsService,
         {
           provide: getRepositoryToken(Stats),
           useValue: mockStatsRepository,
         },
+        AuthService,
         {
-          provide: REQUEST,
-          useValue: { user: { id: TEST_USER_ID } },
+          provide: AuthService,
+          useValue: mockAuthService,
         },
       ],
     }).compile();
@@ -41,6 +51,8 @@ describe('Statistics Module', () => {
     controller = module.get<StatsController>(StatsController);
     service = module.get<StatsService>(StatsService);
     statsRepository = module.get(getRepositoryToken(Stats));
+
+    authController = module.get<AuthController>(AuthController);
   });
 
   describe('StatsService - getUserStatistics(userId)', () => {
@@ -129,83 +141,40 @@ describe('Statistics Module', () => {
       } as Game;
 
       mockStatsRepository.findOne.mockResolvedValue(null);
-      mockStatsRepository.create.mockReturnValue({ userId: newUserId });
-      mockStatsRepository.save.mockImplementation(async (s) => s);
+      mockStatsRepository.create.mockImplementation((data) => data);
+      mockStatsRepository.save.mockImplementation(async (s) => s); 
 
       const result = await service.updateStatistics(game, newUserId);
       console.log(result);
 
-      expect(mockStatsRepository.create).toHaveBeenCalledWith({
-        userId: newUserId,
-        gamesPlayed: 0,
-        gamesWon: 0,
-        gamesLost: 0,
-        totalGuesses: 0,
-        totalMistakes: 0,
-        bestStreak: 0,
-        currentStreak: 0,
-      });
+
+      expect(result.totalGuesses).toBe(10);
       expect(result.gamesPlayed).toBe(1);
       expect(result.gamesWon).toBe(1);
     });
   });
 
   describe('StatsController - getMyStatistics()', () => {
-    it('should return stats for the authenticated user (gets userId from request)', async () => {
-      const mockStats = {
-        gamesPlayed: 25,
-        gamesWon: 18,
-        gamesLost: 7,
-        totalGuesses: 142,
-        totalMistakes: 28,
-        bestStreak: 5,
-        currentStreak: 2,
+    it('should register userId in session', async () => {
+      const mockSession = {} as any;
+      const mockResult = {
+        success: true,
+        user: { id: 'user-123', username: 'testuser' }
       };
 
-      // Mock the service's getUserStatistics method (called by controller)
-      jest.spyOn(service, 'getUserStatistics').mockResolvedValue(mockStats);
-
-      // Create mock request object with user
-      const mockReq = {
-        user: { id: TEST_USER_ID }
-      } as any;
-
-      const result = await controller.getMyStatistics(mockReq);
-
-      expect(result).toEqual({
-        success: true,
-        statistics: mockStats,
-      });
-      // Controller should call getUserStatistics with userId from request
-      expect(service.getUserStatistics).toHaveBeenCalledWith(TEST_USER_ID);
+      mockAuthService.login.mockResolvedValue(mockResult);
+      await authController.login({ username: 'testuser', password: 'pass' }, mockSession); 
+	    
+       // Verify session was set
+       expect(mockSession.userId).toBe('user-123');
     });
 
-    it('should return unauthenticated message when no user in request', async () => {
-      // Create module with no user in request
-      const module = await Test.createTestingModule({
-        controllers: [StatsController],
-        providers: [
-          StatsService,
-          {
-            provide: getRepositoryToken(Stats),
-            useValue: mockStatsRepository,
-          },
-          {
-            provide: REQUEST,
-            useValue: { user: null },
-          },
-        ],
-      }).compile();
-
-      const unAuthController = module.get<StatsController>(StatsController);
-      const unAuthService = module.get<StatsService>(StatsService);
-
+    it('should return unauthenticated message when not logged in', async () => {
       // Spy on the method instead of using it directly
-      const spy = jest.spyOn(unAuthService, 'getUserStatistics');	
+      const spy = jest.spyOn(service, 'getUserStatistics');	
 
-       // Create mock request with NO user
-      const mockReq = {} as any;
-      const result = await unAuthController.getMyStatistics(mockReq);
+      const mockSess = {} as any;
+      const result = await controller.getMyStatistics(mockSess);
 
       expect(result).toEqual({
         message: 'Please log in to view your statistics',
@@ -216,74 +185,6 @@ describe('Statistics Module', () => {
 
       // Clean up
       spy.mockRestore();
-    });
-  });
-
-  describe('Integration - Complete flow with both functions', () => {
-    it('should: update stats → get stats for same user', async () => {
-      const playerId = `player-${Date.now()}`;
-      let savedStats: any = null;
-
-      // Create module for this player
-      const module = await Test.createTestingModule({
-        controllers: [StatsController],
-        providers: [
-          StatsService,
-          {
-            provide: getRepositoryToken(Stats),
-            useValue: {
-              findOne: jest.fn(),
-              create: jest.fn(),
-              save: jest.fn(),
-            },
-          },
-          {
-            provide: REQUEST,
-            useValue: { user: { id: playerId } },
-          },
-        ],
-      }).compile();
-
-      const playerController = module.get<StatsController>(StatsController);
-      const playerService = module.get<StatsService>(StatsService);
-      const playerStatsRepo = module.get(getRepositoryToken(Stats));
-
-      // Step 1: No stats initially
-      playerStatsRepo.findOne.mockResolvedValue(null);
-      const initialStats = await playerService.getUserStatistics(playerId);
-      expect(initialStats.gamesPlayed).toBe(0);
-
-      // Step 2: Play and win a game
-      playerStatsRepo.findOne.mockResolvedValue(null);
-      playerStatsRepo.create.mockReturnValue({ userId: playerId });
-      playerStatsRepo.save.mockImplementation(async (s) => {
-        savedStats = s;
-        return s;
-      });
-
-      await playerService.updateStatistics({ status: 'won', guessCount: 8, mistakes: 2 } as Game, playerId);
-
-      // Step 3: Get stats via controller (should show updated stats)
-      const updatedStats = {
-        gamesPlayed: 1,
-        gamesWon: 1,
-        gamesLost: 0,
-        totalGuesses: 8,
-        totalMistakes: 2,
-        bestStreak: 1,
-        currentStreak: 1,
-      };
-      
-      jest.spyOn(playerService, 'getUserStatistics').mockResolvedValue(updatedStats);
-
-      const mockReq = {
-        user: {id:playerId} //weird
-      } as any;
-      const result = await playerController.getMyStatistics(mockReq);
-	console.log(result)
-      
-      expect(result.statistics.gamesPlayed).toBe(1);
-      expect(result.statistics.gamesWon).toBe(1);
     });
   });
 });

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Stats } from './user.entity';
+import { Stats } from './stats.entity';
 import { Game } from '../game/game.entity';
 
 @Injectable()
@@ -27,15 +27,6 @@ export class StatsService {
         totalGuesses: 0,
         totalMistakes: 0,
       });
-
-      stats.userId = userId;
-      stats.gamesPlayed = 0;
-      stats.gamesWon = 0;
-      stats.gamesLost = 0;
-      stats.totalGuesses = 0;
-      stats.totalMistakes = 0;
-      stats.bestStreak = 0;
-      stats.currentStreak = 0; //looks pointless but only this worked for 1 test
     }
 
     const isWin = game.status === 'won';

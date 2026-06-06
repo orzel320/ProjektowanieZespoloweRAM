@@ -37,4 +37,7 @@ export class Game {
 
   @Column({ name: 'finished_at', type: 'timestamptz', nullable: true })
   finishedAt: Date | null;
+
+  @Column({ name: 'user_id', type: 'uuid', nullable: true }) 
+  userId: string | null;
 }
