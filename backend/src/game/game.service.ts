@@ -6,13 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BoardsService } from '../boards/boards.service';
+import { StatsService } from '../user/stats.service'; 
 import { Game } from './game.entity';
-import type {
-  BoardPayload,
-  CategoryPayload,
-  GameStatusValue,
-  HintType,
-} from './game.types';
+import type { BoardPayload, CategoryPayload, GameStatusValue, HintType } from './game.types';
 
 const MAX_MISTAKES = 4;
 
@@ -21,10 +17,11 @@ export class GameService {
   constructor(
     @InjectRepository(Game)
     private readonly gamesRepository: Repository<Game>,
+    private readonly statsService: StatsService,
     private readonly boardsService: BoardsService,
   ) {}
 
-  async generate(topic: string, difficulty: string, language: string) {
+  async generate(topic: string, difficulty: string, language: string, userId?:string) { 
     const raw = await this.boardsService.generate(topic, difficulty, language);
     const board = this.parseAndValidateBoard(raw);
     const gridOrder = this.shuffle(board.categories.flatMap((c) => c.words));
@@ -37,6 +34,7 @@ export class GameService {
       guessCount: 0,
       hintUsed: false,
       finishedAt: null,
+      userId: userId || null , 
     });
     const saved = await this.gamesRepository.save(game);
     return { gameId: saved.id, grid: saved.gridOrder };
@@ -95,6 +93,7 @@ export class GameService {
       }
     }
 
+    const previousStatus = game.status;
     game.guessCount += 1;
 
     if (matchedIndex !== null) {
@@ -115,6 +114,16 @@ export class GameService {
     }
 
     await this.gamesRepository.save(game);
+
+    const userId = game.userId;
+    if (previousStatus === 'in_progress' && game.status !== 'in_progress' && userId) {
+      try {
+        await this.statsService.updateStatistics(game, userId);
+      } catch (error) {
+        console.error('Failed to update statistics:', error);
+      }
+    }
+
     const updated = this.toPublicState(game);
 
     return {

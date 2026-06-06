@@ -1,11 +1,15 @@
 import { Controller, Post, Body, Session, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { StatsService } from '../user/stats.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private statsService: StatsService,
+  ) {}
 
   @Post('register')
   async register(@Body() body: { username: string; password: string }) {
@@ -15,13 +19,19 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: { username: string; password: string }, @Session() session: any) {
     const result = await this.authService.login(body.username, body.password);
-    
+
     if (result.success && result.user) {
       // Store user in session (server-side, automatically sends cookie)
       session.userId = result.user.id;
       session.username = result.user.username;
+
+      try {
+        await this.statsService.incrementLoginCount(result.user.id);
+      } catch (error) {
+        console.error('Failed to increment login count:', error);
+      }
     }
-    
+
     return result;
   }
 
@@ -36,8 +46,8 @@ export class AuthController {
     if (!session.userId) {
       return { authenticated: false };
     }
-    return { 
-      authenticated: true, 
+    return {
+      authenticated: true,
       user: { id: session.userId, username: session.username }
     };
   }

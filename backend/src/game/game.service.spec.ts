@@ -5,6 +5,8 @@ import { BoardsService } from '../boards/boards.service';
 import { Game } from './game.entity';
 import { GameService } from './game.service';
 import type { BoardPayload } from './game.types';
+import { UserModule } from '../user/user.module';
+import { StatsService } from '../user/stats.service'; // could be changed maybe ?? ( shorter ) 
 
 function makeMockBoard(overrides: Partial<BoardPayload> = {}): BoardPayload {
   return {
@@ -43,6 +45,12 @@ const mockGamesRepository = {
   findOne: jest.fn(),
 };
 
+//added stats mocks
+const mockStatsService = {
+  updateStatistics: jest.fn(),
+  getUserStatistics: jest.fn(),
+};
+
 const mockBoardsService = {
   generate: jest.fn(),
 };
@@ -58,6 +66,7 @@ describe('GameService', () => {
         GameService,
         { provide: getRepositoryToken(Game), useValue: mockGamesRepository },
         { provide: BoardsService, useValue: mockBoardsService },
+	{ provide: StatsService, useValue: mockStatsService },
       ],
     }).compile();
 

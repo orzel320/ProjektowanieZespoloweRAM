@@ -72,6 +72,7 @@ export default function GameGrid({
             const response = await fetch(`http://localhost:3001/game/${gameId}/hint`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ type })
             });
 
@@ -149,6 +150,7 @@ export default function GameGrid({
             const response = await fetch(`http://localhost:3001/game/${gameId}/guess`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ words: guessWordsText })
             });
 
@@ -237,6 +239,7 @@ export default function GameGrid({
             await fetch("http://localhost:3001/auth/logout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
             });
         } catch (error) {
             console.error("Logout error:", error);

@@ -54,6 +54,7 @@ export default function PlayPage({ dict, lang }) {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     topic: topic.trim() || 'General',
                     difficulty: difficulty,
@@ -80,7 +81,8 @@ export default function PlayPage({ dict, lang }) {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                }
+                },
+                credentials: "include",
             });
 
             if (!response.ok) {

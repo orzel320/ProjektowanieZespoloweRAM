@@ -5,6 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Session, //added
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { GenerateGameDto } from './dto/generate-game.dto';
@@ -19,8 +20,9 @@ export class GameController {
 
   @Post('generate')
   @ApiBody({ type: GenerateGameDto })
-  async generate(@Body() body: GenerateGameDto) {
-    return this.gameService.generate(body.topic, body.difficulty, body.language);
+  async generate(@Body() body: GenerateGameDto, @Session() session: any) { 
+    const userId = session?.userId || null; 
+    return this.gameService.generate(body.topic, body.difficulty, body.language, userId); 
   }
 
   @Post(':gameId/guess')
