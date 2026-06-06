@@ -96,6 +96,24 @@ export class GameService {
     const previousStatus = game.status;
     game.guessCount += 1;
 
+    let isOneAway = false;
+    if (matchedIndex === null) {
+      const guessSet = new Set(normalizedGuess);
+      for (let i = 0; i < game.boardJson.categories.length; i++) {
+        if (solved.has(i)) {
+          continue;
+        }
+        const catWords = game.boardJson.categories[i].words.map((w) =>
+          this.normalizeWord(w),
+        );
+        const matches = catWords.filter((w) => guessSet.has(w)).length;
+        if (matches === 3) {
+          isOneAway = true;
+          break;
+        }
+      }
+    }
+
     if (matchedIndex !== null) {
       const nextSolved = [...game.solvedCategoryIndices, matchedIndex].sort(
         (a, b) => a - b,
@@ -129,6 +147,7 @@ export class GameService {
     return {
       correct: matchedIndex !== null,
       gameEnded: game.status !== 'in_progress',
+      isOneAway,
       ...updated,
     };
   }

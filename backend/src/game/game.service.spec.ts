@@ -5,8 +5,7 @@ import { BoardsService } from '../boards/boards.service';
 import { Game } from './game.entity';
 import { GameService } from './game.service';
 import type { BoardPayload } from './game.types';
-import { UserModule } from '../user/user.module';
-import { StatsService } from '../user/stats.service'; // could be changed maybe ?? ( shorter ) 
+import { StatsService } from '../user/stats.service';
 
 function makeMockBoard(overrides: Partial<BoardPayload> = {}): BoardPayload {
   return {
@@ -262,6 +261,50 @@ describe('GameService', () => {
       await expect(service.guess('nonexistent', ['LION', 'TIGER', 'PUMA', 'CHEETAH'])).rejects.toThrow(
         NotFoundException,
       );
+    });
+
+    it('should set isOneAway when 3 of 4 words match a single category', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.guess('test-uuid', ['LION', 'TIGER', 'PUMA', 'HUSKY']) as any;
+
+      expect(result.correct).toBe(false);
+      expect(result.isOneAway).toBe(true);
+    });
+
+    it('should not set isOneAway when fewer than 3 words match any category', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.guess('test-uuid', ['LION', 'TIGER', 'HUSKY', 'EAGLE']) as any;
+
+      expect(result.correct).toBe(false);
+      expect(result.isOneAway).toBe(false);
+    });
+
+    it('should set isOneAway=false for a correct guess', async () => {
+      const game = makeGame();
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.guess('test-uuid', ['LION', 'TIGER', 'PUMA', 'CHEETAH']) as any;
+
+      expect(result.correct).toBe(true);
+      expect(result.isOneAway).toBe(false);
+    });
+
+    it('should not count solved categories toward isOneAway', async () => {
+      const game = makeGame({ solvedCategoryIndices: [0] });
+      mockGamesRepository.findOne.mockResolvedValue(game);
+      mockGamesRepository.save.mockResolvedValue(game);
+
+      const result = await service.guess('test-uuid', ['LION', 'TIGER', 'PUMA', 'HUSKY']) as any;
+
+      expect(result.correct).toBe(false);
+      expect(result.isOneAway).toBe(false);
     });
 
     it('should not allow guessing an already-solved category', async () => {
